@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once 'common.php';
 
 // Verificar se as configurações existem, caso contrário, definir padrões
 if (!isset($_SESSION['dpi'])) $_SESSION['dpi'] = 800;
@@ -18,6 +19,8 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
     <title>Modo Flick | Valorant Aim Trainer</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap">
     <style>
+        <?= getThemeCSS() ?>
+        
         :root {
             --primary: #ff4655;
             --secondary: #0f1923;
@@ -317,6 +320,23 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
         .hide {
             display: none;
         }
+        
+        /* Adicionando estilo para botão de dificuldade selecionado */
+        .difficulty-btn.active {
+            background-color: var(--primary);
+            border: 2px solid white;
+        }
+        
+        /* Garantir que os elementos clicáveis estejam realmente clicáveis */
+        .overlay {
+            z-index: 1000; /* Garantir que o overlay esteja acima de tudo */
+        }
+        
+        .difficulty-btn, #start-btn {
+            position: relative;
+            z-index: 1001; /* Garantir que os botões estejam acima do overlay */
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -374,12 +394,12 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
                 
                 <h3>Selecione a Dificuldade:</h3>
                 <div class="difficulty-controls">
-                    <button class="btn difficulty-btn" data-difficulty="easy">Fácil</button>
-                    <button class="btn difficulty-btn" data-difficulty="medium">Médio</button>
-                    <button class="btn difficulty-btn" data-difficulty="hard">Difícil</button>
+                    <button type="button" class="btn difficulty-btn active" data-difficulty="easy">Fácil</button>
+                    <button type="button" class="btn difficulty-btn" data-difficulty="medium">Médio</button>
+                    <button type="button" class="btn difficulty-btn" data-difficulty="hard">Difícil</button>
                 </div>
                 
-                <button id="start-btn" class="btn">Iniciar Treino</button>
+                <button type="button" id="start-btn" class="btn">Iniciar Treino</button>
             </div>
         </div>
         
@@ -425,7 +445,7 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
     
     <script>
         // Configurações baseadas no PHP
-        const edpi = <?= $_SESSION['edpi'] ?>;
+        const edpi = <?= $_SESSION['settings']['edpi'] ?>;
         
         // Variáveis do jogo
         let gameActive = false;
@@ -433,7 +453,7 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
         let flicks = 0;
         let timeLeft = 60;
         let timeInterval;
-        let difficulty = 'medium'; // Padrão
+        let difficulty = 'easy'; // Padrão alterado para 'easy'
         let flickTimes = [];
         let flickDistances = [];
         let currentTarget = null;
@@ -481,25 +501,51 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
             }
         };
         
-        // Event listeners
-        startButton.addEventListener('click', startCountdown);
-        restartButton.addEventListener('click', restartGame);
-        restartButtonResult.addEventListener('click', restartGame);
+        // Verificação de elementos DOM
+        console.log('Start button found:', startButton !== null);
+        console.log('Difficulty buttons found:', difficultyButtons.length);
         
+        // Inicializar sistema de seleção de dificuldade
         difficultyButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                difficulty = button.dataset.difficulty;
+            console.log('Setting up button for difficulty:', button.dataset.difficulty);
+            
+            button.addEventListener('click', function() {
+                console.log('Difficulty button clicked:', this.dataset.difficulty);
                 
-                // Atualizar UI para mostrar a dificuldade selecionada
-                difficultyButtons.forEach(btn => {
-                    btn.classList.remove('btn-secondary');
-                });
-                button.classList.add('btn-secondary');
+                // Remover classe active de todos os botões
+                difficultyButtons.forEach(btn => btn.classList.remove('active'));
+                
+                // Adicionar classe active ao botão clicado
+                this.classList.add('active');
+                
+                // Atualizar a dificuldade selecionada
+                difficulty = this.dataset.difficulty;
+                
+                console.log('Difficulty set to:', difficulty);
             });
         });
         
+        // Event listeners
+        if (startButton) {
+            startButton.addEventListener('click', function() {
+                console.log('Start button clicked! Starting with difficulty:', difficulty);
+                startCountdown();
+            });
+        } else {
+            console.error('Start button not found!');
+        }
+        
+        if (restartButton) {
+            restartButton.addEventListener('click', restartGame);
+        }
+        
+        if (restartButtonResult) {
+            restartButtonResult.addEventListener('click', restartGame);
+        }
+        
         // Função para iniciar a contagem regressiva
         function startCountdown() {
+            console.log('Starting countdown with difficulty:', difficulty);
             startOverlay.classList.add('hide');
             countdownElement.classList.remove('hide');
             

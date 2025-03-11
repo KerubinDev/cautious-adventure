@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'common.php';
 
 // Verificar se as configurações existem, caso contrário, definir padrões
 if (!isset($_SESSION['dpi'])) $_SESSION['dpi'] = 800;
@@ -18,6 +18,8 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
     <title>Modo Micro Ajustes | Valorant Aim Trainer</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap">
     <style>
+        <?= getThemeCSS() ?>
+        
         :root {
             --primary: #ff4655;
             --secondary: #0f1923;
@@ -341,6 +343,18 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
             background-color: var(--primary);
             border: 2px solid white;
         }
+        
+        /* Garantir que os elementos clicáveis estejam realmente clicáveis */
+        .overlay {
+            z-index: 1000; /* Garantir que o overlay esteja acima de tudo */
+        }
+        
+        .difficulty-btn, #start-btn {
+            position: relative;
+            z-index: 1001; /* Garantir que os botões estejam acima do overlay */
+            cursor: pointer !important;
+            pointer-events: auto !important;
+        }
     </style>
 </head>
 <body>
@@ -408,7 +422,7 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
                     <button type="button" class="btn difficulty-btn" data-difficulty="hard">Difícil</button>
                 </div>
                 
-                <button id="start-btn" class="btn">Iniciar Treino</button>
+                <button type="button" id="start-btn" class="btn">Iniciar Treino</button>
             </div>
         </div>
         
@@ -454,7 +468,7 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
     
     <script>
         // Configurações baseadas no PHP
-        const edpi = <?= $_SESSION['edpi'] ?>;
+        const edpi = <?= $_SESSION['settings']['edpi'] ?>;
         
         // Variáveis do jogo
         let gameActive = false;
@@ -464,7 +478,7 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
         let targetsCreated = 0;
         let timeLeft = 60;
         let timeInterval;
-        let difficulty = 'easy'; // Padrão (mudado para 'easy' em vez de 'medium')
+        let difficulty = 'easy'; // Padrão alterado para 'easy'
         let adjustTimes = [];
         let patternsCompleted = 0;
         let currentPattern = [];
@@ -489,154 +503,58 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
         const difficultyButtons = document.querySelectorAll('.difficulty-btn');
         const patternPreview = document.getElementById('pattern-preview');
         
-        // Configurações de dificuldade
-        const difficultySettings = {
-            easy: {
-                pointCount: 5,
-                pointSize: 6,
-                patternSize: 80,
-                targetTimeout: 3000,
-                pointInterval: 800
-            },
-            medium: {
-                pointCount: 8,
-                pointSize: 5,
-                patternSize: 100,
-                targetTimeout: 2500,
-                pointInterval: 600
-            },
-            hard: {
-                pointCount: 12,
-                pointSize: 4,
-                patternSize: 120,
-                targetTimeout: 2000,
-                pointInterval: 400
-            }
-        };
+        // Verificação de elementos DOM
+        console.log('Start button found:', startButton !== null);
+        console.log('Difficulty buttons found:', difficultyButtons.length);
         
-        // Padrões de recoil (simulados)
-        const recoilPatterns = [
-            // Padrão de Vandal
-            [
-                {x: 0, y: 0}, {x: 2, y: -20}, {x: 5, y: -35}, 
-                {x: 10, y: -40}, {x: 0, y: -45}, {x: -10, y: -47},
-                {x: -15, y: -45}, {x: -12, y: -40}, {x: -5, y: -35},
-                {x: 0, y: -30}, {x: 5, y: -25}, {x: 0, y: -20}
-            ],
-            // Padrão de Phantom
-            [
-                {x: 0, y: 0}, {x: 0, y: -15}, {x: 5, y: -25}, 
-                {x: 8, y: -30}, {x: 5, y: -35}, {x: 0, y: -40},
-                {x: -5, y: -38}, {x: -8, y: -35}, {x: -5, y: -30},
-                {x: 0, y: -25}, {x: 3, y: -20}, {x: 0, y: -15}
-            ],
-            // Padrão de Spectre
-            [
-                {x: 0, y: 0}, {x: -5, y: -10}, {x: -10, y: -18}, 
-                {x: -8, y: -25}, {x: -5, y: -30}, {x: 0, y: -32},
-                {x: 5, y: -30}, {x: 8, y: -25}, {x: 10, y: -20},
-                {x: 8, y: -15}, {x: 5, y: -10}, {x: 0, y: -5}
-            ]
-        ];
-        
-        // Event listeners
-        startButton.addEventListener('click', startCountdown);
-        restartButton.addEventListener('click', restartGame);
-        restartButtonResult.addEventListener('click', restartGame);
-        
-        difficultyButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                // Remover classe active de todos os botões
-                difficultyButtons.forEach(btn => btn.classList.remove('active'));
+        // Correção de Botões
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM fully loaded');
+            
+            // Re-selecionar elementos por segurança
+            const startBtn = document.getElementById('start-btn');
+            const diffBtns = document.querySelectorAll('.difficulty-btn');
+            
+            // Inicializar sistema de seleção de dificuldade novamente
+            diffBtns.forEach(button => {
+                console.log('Setting up button for difficulty:', button.dataset.difficulty);
                 
-                // Adicionar classe active ao botão clicado
-                this.classList.add('active');
-                
-                // Atualizar a dificuldade selecionada
-                difficulty = this.dataset.difficulty;
-                
-                // Atualizar preview se necessário
-                updatePatternPreview();
-                
-                console.log('Dificuldade selecionada:', difficulty);
+                button.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    console.log('Difficulty button clicked:', this.dataset.difficulty);
+                    
+                    // Remover classe active de todos os botões
+                    diffBtns.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Adicionar classe active ao botão clicado
+                    this.classList.add('active');
+                    
+                    // Atualizar a dificuldade selecionada
+                    difficulty = this.dataset.difficulty;
+                    
+                    console.log('Difficulty set to:', difficulty);
+                    return false;
+                };
             });
-        });
-        
-        // Movimento do cursor
-        arena.addEventListener('mousemove', (e) => {
-            const rect = arena.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
             
-            crosshair.style.left = `${x}px`;
-            crosshair.style.top = `${y}px`;
-        });
-        
-        // Clique para acertar alvo
-        arena.addEventListener('click', (e) => {
-            if (!gameActive) return;
-            
-            // Verificar se há algum alvo ativo
-            const target = document.querySelector('.micro-target:not(.hit)');
-            if (!target) return;
-            
-            const rect = arena.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
-            
-            const targetRect = target.getBoundingClientRect();
-            const targetX = targetRect.left - rect.left + targetRect.width / 2;
-            const targetY = targetRect.top - rect.top + targetRect.height / 2;
-            
-            // Calcular distância
-            const distance = Math.sqrt(
-                Math.pow(clickX - targetX, 2) + 
-                Math.pow(clickY - targetY, 2)
-            );
-            
-            // Verificar precisão (baseado no tamanho do alvo e tolerância)
-            const tolerance = target.offsetWidth;
-            
-            if (distance <= tolerance) {
-                handleHit(target, clickX, clickY);
-            } else {
-                handleMiss(clickX, clickY);
+            // Adicionar evento de clique ao botão iniciar
+            if (startBtn) {
+                startBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    console.log('Start button clicked! Starting with difficulty:', difficulty);
+                    startCountdown();
+                    return false;
+                };
             }
         });
-        
-        // Função para atualizar preview de padrão
-        function updatePatternPreview() {
-            // Limpar preview
-            while (patternPreview.children.length > 0) {
-                patternPreview.removeChild(patternPreview.lastChild);
-            }
-            
-            const settings = difficultySettings[difficulty];
-            const pattern = recoilPatterns[0].slice(0, settings.pointCount);
-            
-            // Criar pontos da preview
-            pattern.forEach((point, index) => {
-                const dot = document.createElement('div');
-                dot.className = 'dot';
-                dot.style.left = `${60 + point.x * 0.6}px`;
-                dot.style.top = `${60 + point.y * 0.6}px`;
-                
-                // Tornar o primeiro ponto maior
-                if (index === 0) {
-                    dot.style.width = '8px';
-                    dot.style.height = '8px';
-                    dot.style.background = 'rgba(255, 255, 255, 0.8)';
-                }
-                
-                patternPreview.appendChild(dot);
-            });
-        }
-        
-        // Inicializar preview
-        updatePatternPreview();
         
         // Função para iniciar a contagem regressiva
         function startCountdown() {
+            console.log('Starting countdown with difficulty:', difficulty);
             startOverlay.classList.add('hide');
             countdownElement.classList.remove('hide');
             
