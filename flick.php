@@ -394,12 +394,12 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
                 
                 <h3>Selecione a Dificuldade:</h3>
                 <div class="difficulty-controls">
-                    <button type="button" class="btn difficulty-btn active" data-difficulty="easy">Fácil</button>
-                    <button type="button" class="btn difficulty-btn" data-difficulty="medium">Médio</button>
-                    <button type="button" class="btn difficulty-btn" data-difficulty="hard">Difícil</button>
+                    <button type="button" onclick="selectDifficulty('easy', this)" class="difficulty-btn active">Fácil</button>
+                    <button type="button" onclick="selectDifficulty('medium', this)" class="difficulty-btn">Médio</button>
+                    <button type="button" onclick="selectDifficulty('hard', this)" class="difficulty-btn">Difícil</button>
                 </div>
                 
-                <button type="button" id="start-btn" class="btn">Iniciar Treino</button>
+                <button type="button" onclick="startTraining()" id="start-btn" class="btn">Iniciar Treino</button>
             </div>
         </div>
         
@@ -443,7 +443,32 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
         </div>
     </div>
     
+    <div class="countdown hide" id="countdown">3</div>
+    
     <script>
+        // Variável global para dificuldade
+        let difficulty = 'easy';
+        
+        // Função para selecionar dificuldade
+        function selectDifficulty(diff, button) {
+            console.log("Dificuldade selecionada:", diff);
+            difficulty = diff;
+            
+            // Remover classe active de todos os botões
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Adicionar classe active ao botão clicado
+            button.classList.add('active');
+        }
+        
+        // Função para iniciar o treinamento
+        function startTraining() {
+            console.log("Iniciando treinamento com dificuldade:", difficulty);
+            startCountdown();
+        }
+        
         // Configurações baseadas no PHP
         const edpi = <?= $_SESSION['settings']['edpi'] ?>;
         
@@ -453,7 +478,6 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
         let flicks = 0;
         let timeLeft = 60;
         let timeInterval;
-        let difficulty = 'easy'; // Padrão alterado para 'easy'
         let flickTimes = [];
         let flickDistances = [];
         let currentTarget = null;
@@ -479,69 +503,25 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
         // Configurações de dificuldade
         const difficultySettings = {
             easy: {
-                targetSize: 65,
-                minDistance: 100,
-                maxDistance: 300,
-                targetInterval: {min: 1000, max: 1500},
-                maxFlickTime: 800 // Tempo máximo para pontuação máxima
+                targetSize: 40,
+                targetSpeed: 1500,
+                targetSpawnRate: 1200
             },
             medium: {
-                targetSize: 50,
-                minDistance: 150,
-                maxDistance: 400,
-                targetInterval: {min: 800, max: 1300},
-                maxFlickTime: 600 // Tempo máximo para pontuação máxima
+                targetSize: 30,
+                targetSpeed: 1200,
+                targetSpawnRate: 1000
             },
             hard: {
-                targetSize: 35,
-                minDistance: 200,
-                maxDistance: 500,
-                targetInterval: {min: 600, max: 1000},
-                maxFlickTime: 400 // Tempo máximo para pontuação máxima
+                targetSize: 20,
+                targetSpeed: 900,
+                targetSpawnRate: 800
             }
         };
         
         // Verificação de elementos DOM
         console.log('Start button found:', startButton !== null);
         console.log('Difficulty buttons found:', difficultyButtons.length);
-        
-        // Inicializar sistema de seleção de dificuldade
-        difficultyButtons.forEach(button => {
-            console.log('Setting up button for difficulty:', button.dataset.difficulty);
-            
-            button.addEventListener('click', function() {
-                console.log('Difficulty button clicked:', this.dataset.difficulty);
-                
-                // Remover classe active de todos os botões
-                difficultyButtons.forEach(btn => btn.classList.remove('active'));
-                
-                // Adicionar classe active ao botão clicado
-                this.classList.add('active');
-                
-                // Atualizar a dificuldade selecionada
-                difficulty = this.dataset.difficulty;
-                
-                console.log('Difficulty set to:', difficulty);
-            });
-        });
-        
-        // Event listeners
-        if (startButton) {
-            startButton.addEventListener('click', function() {
-                console.log('Start button clicked! Starting with difficulty:', difficulty);
-                startCountdown();
-            });
-        } else {
-            console.error('Start button not found!');
-        }
-        
-        if (restartButton) {
-            restartButton.addEventListener('click', restartGame);
-        }
-        
-        if (restartButtonResult) {
-            restartButtonResult.addEventListener('click', restartGame);
-        }
         
         // Função para iniciar a contagem regressiva
         function startCountdown() {

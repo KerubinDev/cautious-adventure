@@ -417,12 +417,12 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
                 
                 <h3>Selecione a Dificuldade:</h3>
                 <div class="difficulty-controls">
-                    <button type="button" class="btn difficulty-btn active" data-difficulty="easy">Fácil</button>
-                    <button type="button" class="btn difficulty-btn" data-difficulty="medium">Médio</button>
-                    <button type="button" class="btn difficulty-btn" data-difficulty="hard">Difícil</button>
+                    <button type="button" onclick="selectDifficulty('easy', this)" class="difficulty-btn active">Fácil</button>
+                    <button type="button" onclick="selectDifficulty('medium', this)" class="difficulty-btn">Médio</button>
+                    <button type="button" onclick="selectDifficulty('hard', this)" class="difficulty-btn">Difícil</button>
                 </div>
                 
-                <button type="button" id="start-btn" class="btn">Iniciar Treino</button>
+                <button type="button" onclick="startTraining()" id="start-btn" class="btn">Iniciar Treino</button>
             </div>
         </div>
         
@@ -466,7 +466,32 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
         </div>
     </div>
     
+    <div class="countdown hide" id="countdown">3</div>
+
     <script>
+        // Variável global para dificuldade
+        let difficulty = 'easy';
+        
+        // Função para selecionar dificuldade
+        function selectDifficulty(diff, button) {
+            console.log("Dificuldade selecionada:", diff);
+            difficulty = diff;
+            
+            // Remover classe active de todos os botões
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Adicionar classe active ao botão clicado
+            button.classList.add('active');
+        }
+        
+        // Função para iniciar o treinamento
+        function startTraining() {
+            console.log("Iniciando treinamento com dificuldade:", difficulty);
+            startCountdown();
+        }
+        
         // Configurações baseadas no PHP
         const edpi = <?= $_SESSION['settings']['edpi'] ?>;
         
@@ -478,7 +503,6 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
         let targetsCreated = 0;
         let timeLeft = 60;
         let timeInterval;
-        let difficulty = 'easy'; // Padrão alterado para 'easy'
         let adjustTimes = [];
         let patternsCompleted = 0;
         let currentPattern = [];
@@ -496,65 +520,11 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
         const progressBar = document.getElementById('progress-bar');
         const startOverlay = document.getElementById('start-overlay');
         const resultOverlay = document.getElementById('result-overlay');
-        const startButton = document.getElementById('start-btn');
-        const restartButton = document.getElementById('restart-btn');
-        const restartButtonResult = document.getElementById('restart-btn-result');
         const countdownElement = document.getElementById('countdown');
-        const difficultyButtons = document.querySelectorAll('.difficulty-btn');
         const patternPreview = document.getElementById('pattern-preview');
-        
-        // Verificação de elementos DOM
-        console.log('Start button found:', startButton !== null);
-        console.log('Difficulty buttons found:', difficultyButtons.length);
-        
-        // Correção de Botões
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM fully loaded');
-            
-            // Re-selecionar elementos por segurança
-            const startBtn = document.getElementById('start-btn');
-            const diffBtns = document.querySelectorAll('.difficulty-btn');
-            
-            // Inicializar sistema de seleção de dificuldade novamente
-            diffBtns.forEach(button => {
-                console.log('Setting up button for difficulty:', button.dataset.difficulty);
-                
-                button.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    console.log('Difficulty button clicked:', this.dataset.difficulty);
-                    
-                    // Remover classe active de todos os botões
-                    diffBtns.forEach(btn => btn.classList.remove('active'));
-                    
-                    // Adicionar classe active ao botão clicado
-                    this.classList.add('active');
-                    
-                    // Atualizar a dificuldade selecionada
-                    difficulty = this.dataset.difficulty;
-                    
-                    console.log('Difficulty set to:', difficulty);
-                    return false;
-                };
-            });
-            
-            // Adicionar evento de clique ao botão iniciar
-            if (startBtn) {
-                startBtn.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    console.log('Start button clicked! Starting with difficulty:', difficulty);
-                    startCountdown();
-                    return false;
-                };
-            }
-        });
         
         // Função para iniciar a contagem regressiva
         function startCountdown() {
-            console.log('Starting countdown with difficulty:', difficulty);
             startOverlay.classList.add('hide');
             countdownElement.classList.remove('hide');
             
@@ -869,6 +839,6 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
         // Função para tocar som de acerto
         function playHitSound() {
             const audio = new Audio('data:audio/wav;base64,//uQRAAAAWMSLwUIYAAsYkXgoQwAEaYLWfkWgAI0wWs/ItAAAGDgYtAgAyN+QWaAAihwMWm4G8QQRDiMcCBcH3Cc+CDv/7xA4Tvh9Rz/y8QADBwMWgQAZG/ILNAARQ4GLTcDeIIIhxGOBAuD7hOfBB3/94gcJ3w+o5/5eIAIAAAVwWgQAVQ2ORaIQwEMAJiDg95G4nQL7mQVWI6GwRcfsZAcsKkJvxgxEjzFUgfHoSQ9Qq7KNwqHwuB13MA4a1q/DmBrHgPcmjiGoh//EwC5nGPEmS4RcfkVKOhJf+WOgoxJclFz3kgn//dBA+ya1GhurNn8zb//9NNutNuhz31f////9vt///z+IdAEAAAK4LQIAKobHItEIYCGAExBwe8jcToF9zIKrEdDYIuP2MgOWFSE34wYiR5iqQPj0JIeoVdlG4VD4XA67mAcNa1fhzA1jwHuTRxDUQ//iYBczjHiTJcIuPyKlHQkv/LHQUYkuSi57yQT//uggfZNajQ3Vmz+Zt//+mm3Wm3Q576v////+32///5/EOgAAADVghQAAAAA//uQZAUAB1WI0PZugAAAAAoQwAAAEk3nRd2qAAAAACiDgAAAAAAABCqEEQRLCgwpBGMlJkIz8jKhGvj4k6jzRnqasNKIeoh5gI7BJaC1A1AoNBjJgbyApVS4IDlZgDU5WUAxEKDNmmALHzZp0Fkz1FMTmGFl1FMEyodIavcCAUHDWrKAIA4aa2oCgILEBupZgHvAhEBcZ6joQBxS76AgccrFlczBvKLC0QI2cBoCFvfTDAo7eoOQInqDPBtvrDEZBNYN5xwNwxQRfw8ZQ5wQVLvO8OYU+mHvFLlDh05Mdg7BT6YrRPpCBznMB2r//xKJjyyOh+cImr2/4doscwD6neZjuZR4AgAABYAAAABy1xcdQtxYBYYZdifkU
-    </script>
-</body>
+        </script>
+    </body>
 </html> 
