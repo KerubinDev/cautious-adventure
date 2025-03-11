@@ -1,22 +1,5 @@
 <?php
-session_start();
-
-// Verificar se as configurações existem, caso contrário, definir padrões
-if (!isset($_SESSION['settings'])) {
-    $_SESSION['settings'] = [
-        'dpi' => 800,
-        'sens' => 0.5,
-        'edpi' => 400,
-        'crosshair_size' => 6,
-        'crosshair_color' => '#ffffff',
-        'target_color' => '#ff4655',
-        'background_color' => '#151f2e',
-        'sound_enabled' => true,
-        'show_timer' => true,
-        'show_feedback' => true,
-        'theme' => 'default'
-    ];
-}
+require_once 'common.php';
 
 // Processar formulário
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -247,16 +230,7 @@ $settings = $_SESSION['settings'];
     <title>Configurações Avançadas | Valorant Aim Trainer</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap">
     <style>
-        :root {
-            --primary: <?= $settings['target_color'] ?>;
-            --secondary: <?= $settings['background_color'] ?>;
-            --text: #f9f9f9;
-            --accent: #28344a;
-            --accent-light: #3a4a66;
-            --success: #3edd87;
-            --warning: #f7c948;
-            --crosshair-color: <?= $settings['crosshair_color'] ?>;
-        }
+        <?= getThemeCSS() ?>
         
         * {
             margin: 0;

@@ -1,26 +1,5 @@
 <?php
-// config.php
-session_start();
-
-// Verificar se as configurações existem, caso contrário, definir padrões
-if (!isset($_SESSION['settings'])) {
-    $_SESSION['settings'] = [
-        'dpi' => 800,
-        'sens' => 0.5,
-        'edpi' => 400,
-        'crosshair_size' => 6,
-        'crosshair_color' => '#ffffff',
-        'target_color' => '#ff4655',
-        'background_color' => '#151f2e',
-        'sound_enabled' => true,
-        'show_timer' => true,
-        'show_feedback' => true,
-        'theme' => 'default'
-    ];
-}
-
-// Calcular eDPI (effective DPI)
-$edpi = $_SESSION['settings']['edpi'];
+require_once 'common.php';
 ?>
 
 <!DOCTYPE html>
@@ -31,12 +10,7 @@ $edpi = $_SESSION['settings']['edpi'];
     <title>Valorant Aim Trainer</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap">
     <style>
-        :root {
-            --primary: <?= $_SESSION['settings']['target_color'] ?>;
-            --secondary: <?= $_SESSION['settings']['background_color'] ?>;
-            --text: #f9f9f9;
-            --accent: #28344a;
-        }
+        <?= getThemeCSS() ?>
         
         * {
             margin: 0;
@@ -260,7 +234,7 @@ $edpi = $_SESSION['settings']['edpi'];
     </div>
 
                 <div class="settings-value">
-                    <div class="settings-number"><?= $edpi ?></div>
+                    <div class="settings-number"><?= $_SESSION['settings']['edpi'] ?></div>
                     <div class="settings-label">eDPI</div>
                 </div>
             </div>
