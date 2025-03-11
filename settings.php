@@ -255,6 +255,7 @@ $settings = $_SESSION['settings'];
             --accent-light: #3a4a66;
             --success: #3edd87;
             --warning: #f7c948;
+            --crosshair-color: <?= $settings['crosshair_color'] ?>;
         }
         
         * {
@@ -567,7 +568,7 @@ $settings = $_SESSION['settings'];
         <div class="settings-container">
             <div>
                 <!-- Configurações de Sensibilidade -->
-                <form method="POST">
+                <form method="POST" id="settings-form">
                     <div class="settings-section">
                         <h2>Sensibilidade do Mouse</h2>
                         <div class="form-group">
@@ -580,7 +581,7 @@ $settings = $_SESSION['settings'];
                         </div>
                         <div class="form-group">
                             <label>eDPI Calculado</label>
-                            <input type="text" value="<?= $settings['edpi'] ?>" disabled>
+                            <input type="text" id="edpi" value="<?= $settings['edpi'] ?>" disabled>
                         </div>
                     </div>
                     
@@ -638,23 +639,19 @@ $settings = $_SESSION['settings'];
                     <h2>Temas de Agentes</h2>
                     <p>Escolha um agente para aplicar seu esquema de cores ao treinador de mira.</p>
                     
-                    <form method="POST">
-                        <div class="agents-grid">
-                            <?php foreach ($agent_presets as $key => $agent): ?>
-                                <div class="agent-card">
-                                    <input type="radio" name="agent_preset" id="agent-<?= $key ?>" value="<?= $key ?>" <?= $settings['theme'] === $key ? 'checked' : '' ?>>
-                                    <label for="agent-<?= $key ?>">
-                                        <div class="agent-preview" style="background-color: <?= $agent['background'] ?>">
-                                            <div class="agent-crosshair" style="background-color: <?= $agent['crosshair'] ?>"></div>
-                                        </div>
-                                        <div class="agent-name"><?= $agent['name'] ?></div>
-                                    </label>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                        
-                        <button type="submit">Aplicar Tema</button>
-                    </form>
+                    <div class="agents-grid" id="agent-grid">
+                        <?php foreach ($agent_presets as $key => $agent): ?>
+                            <div class="agent-card" data-crosshair="<?= $agent['crosshair'] ?>" data-target="<?= $agent['target'] ?>" data-background="<?= $agent['background'] ?>" data-name="<?= $agent['name'] ?>" data-key="<?= $key ?>">
+                                <input type="radio" name="agent_theme" id="agent-<?= $key ?>" value="<?= $key ?>" <?= $settings['theme'] === $key ? 'checked' : '' ?>>
+                                <label for="agent-<?= $key ?>" class="agent-preview" style="background-color: <?= $agent['background'] ?>">
+                                    <div class="agent-crosshair" style="background-color: <?= $agent['crosshair'] ?>"></div>
+                                    <div class="agent-name"><?= $agent['name'] ?></div>
+                                </label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    
+                    <button type="button" id="apply-theme-btn" class="btn" style="width: 100%; margin-top: 1rem;">Aplicar Tema Selecionado</button>
                 </div>
                 
                 <!-- Informações -->
@@ -673,7 +670,7 @@ $settings = $_SESSION['settings'];
     </div>
     
     <script>
-        // Atualização do preview do crosshair em tempo real
+        // Pegar todos os elementos necessários
         const crosshairSize = document.getElementById('crosshair_size');
         const crosshairColor = document.getElementById('crosshair_color');
         const targetColor = document.getElementById('target_color');
@@ -681,7 +678,12 @@ $settings = $_SESSION['settings'];
         const previewCrosshair = document.getElementById('preview-crosshair');
         const previewTarget = document.querySelector('.preview-target');
         const crosshairPreview = document.querySelector('.crosshair-preview');
+        const themeInput = document.getElementById('theme-input');
+        const settingsForm = document.getElementById('settings-form');
+        const applyThemeBtn = document.getElementById('apply-theme-btn');
+        const agentCards = document.querySelectorAll('.agent-card');
         
+        // Função para atualizar a visualização do crosshair
         function updatePreview() {
             previewCrosshair.style.width = crosshairSize.value + 'px';
             previewCrosshair.style.height = crosshairSize.value + 'px';
@@ -695,19 +697,51 @@ $settings = $_SESSION['settings'];
             document.documentElement.style.setProperty('--crosshair-color', crosshairColor.value);
         }
         
+        // Função para atualizar com base no tema de agente selecionado
+        function updateFromAgentTheme(agentCard) {
+            // Obter os valores do tema
+            const crosshairColorValue = agentCard.dataset.crosshair;
+            const targetColorValue = agentCard.dataset.target;
+            const backgroundColorValue = agentCard.dataset.background;
+            const themeKey = agentCard.dataset.key;
+            
+            // Atualizar inputs de cor
+            crosshairColor.value = crosshairColorValue;
+            targetColor.value = targetColorValue;
+            backgroundColor.value = backgroundColorValue;
+            
+            // Atualizar input de tema
+            themeInput.value = themeKey;
+            
+            // Atualizar visualização
+            updatePreview();
+            
+            // Marcar o radio button
+            const radioButton = agentCard.querySelector('input[type="radio"]');
+            radioButton.checked = true;
+        }
+        
+        // Event listeners para os controles de cor
         crosshairSize.addEventListener('input', updatePreview);
         crosshairColor.addEventListener('input', updatePreview);
         targetColor.addEventListener('input', updatePreview);
         backgroundColor.addEventListener('input', updatePreview);
         
-        // Aplicar tema de agente quando selecionado
-        const agentCards = document.querySelectorAll('.agent-card input[type="radio"]');
-        const themeInput = document.getElementById('theme-input');
-        
+        // Event listeners para os cards de agente
         agentCards.forEach(card => {
-            card.addEventListener('change', function() {
-                themeInput.value = this.value;
+            card.addEventListener('click', () => {
+                updateFromAgentTheme(card);
             });
+        });
+        
+        // Event listener para o botão de aplicar tema
+        applyThemeBtn.addEventListener('click', function() {
+            const checkedRadio = document.querySelector('input[name="agent_theme"]:checked');
+            if (checkedRadio) {
+                const agentCard = checkedRadio.closest('.agent-card');
+                updateFromAgentTheme(agentCard);
+                settingsForm.submit(); // Enviar o formulário para salvar as configurações
+            }
         });
         
         // Inicializar preview
