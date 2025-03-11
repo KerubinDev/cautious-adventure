@@ -335,6 +335,12 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
             border-radius: 50%;
             background: rgba(255, 70, 85, 0.8);
         }
+        
+        /* Adicionando estilo para botão de dificuldade selecionado */
+        .difficulty-btn.active {
+            background-color: var(--primary);
+            border: 2px solid white;
+        }
     </style>
 </head>
 <body>
@@ -397,9 +403,9 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
                 
                 <h3>Selecione a Dificuldade:</h3>
                 <div class="difficulty-controls">
-                    <button class="btn difficulty-btn" data-difficulty="easy">Fácil</button>
-                    <button class="btn difficulty-btn" data-difficulty="medium">Médio</button>
-                    <button class="btn difficulty-btn" data-difficulty="hard">Difícil</button>
+                    <button type="button" class="btn difficulty-btn active" data-difficulty="easy">Fácil</button>
+                    <button type="button" class="btn difficulty-btn" data-difficulty="medium">Médio</button>
+                    <button type="button" class="btn difficulty-btn" data-difficulty="hard">Difícil</button>
                 </div>
                 
                 <button id="start-btn" class="btn">Iniciar Treino</button>
@@ -458,7 +464,7 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
         let targetsCreated = 0;
         let timeLeft = 60;
         let timeInterval;
-        let difficulty = 'medium'; // Padrão
+        let difficulty = 'easy'; // Padrão (mudado para 'easy' em vez de 'medium')
         let adjustTimes = [];
         let patternsCompleted = 0;
         let currentPattern = [];
@@ -539,17 +545,20 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
         restartButtonResult.addEventListener('click', restartGame);
         
         difficultyButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                difficulty = button.dataset.difficulty;
+            button.addEventListener('click', function() {
+                // Remover classe active de todos os botões
+                difficultyButtons.forEach(btn => btn.classList.remove('active'));
                 
-                // Atualizar UI para mostrar a dificuldade selecionada
-                difficultyButtons.forEach(btn => {
-                    btn.classList.remove('btn-secondary');
-                });
-                button.classList.add('btn-secondary');
+                // Adicionar classe active ao botão clicado
+                this.classList.add('active');
                 
-                // Atualizar preview
+                // Atualizar a dificuldade selecionada
+                difficulty = this.dataset.difficulty;
+                
+                // Atualizar preview se necessário
                 updatePatternPreview();
+                
+                console.log('Dificuldade selecionada:', difficulty);
             });
         });
         
