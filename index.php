@@ -2,15 +2,25 @@
 // config.php
 session_start();
 
-// Salvar configurações de sensibilidade
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $_SESSION['dpi'] = (int)$_POST['dpi'];
-    $_SESSION['sens'] = (float)$_POST['sens'];
-    $_SESSION['edpi'] = $_SESSION['dpi'] * $_SESSION['sens'];
+// Verificar se as configurações existem, caso contrário, definir padrões
+if (!isset($_SESSION['settings'])) {
+    $_SESSION['settings'] = [
+        'dpi' => 800,
+        'sens' => 0.5,
+        'edpi' => 400,
+        'crosshair_size' => 6,
+        'crosshair_color' => '#ffffff',
+        'target_color' => '#ff4655',
+        'background_color' => '#151f2e',
+        'sound_enabled' => true,
+        'show_timer' => true,
+        'show_feedback' => true,
+        'theme' => 'default'
+    ];
 }
 
 // Calcular eDPI (effective DPI)
-$edpi = $_SESSION['edpi'] ?? 400; // Valor padrão
+$edpi = $_SESSION['settings']['edpi'];
 ?>
 
 <!DOCTYPE html>
@@ -22,8 +32,8 @@ $edpi = $_SESSION['edpi'] ?? 400; // Valor padrão
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap">
     <style>
         :root {
-            --primary: #ff4655;
-            --secondary: #0f1923;
+            --primary: <?= $_SESSION['settings']['target_color'] ?>;
+            --secondary: <?= $_SESSION['settings']['background_color'] ?>;
             --text: #f9f9f9;
             --accent: #28344a;
         }
@@ -75,28 +85,35 @@ $edpi = $_SESSION['edpi'] ?? 400; // Valor padrão
             align-items: center;
         }
         
-        .settings-bar form {
+        .settings-info {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .settings-value {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .settings-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+        
+        .settings-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .settings-actions {
             display: flex;
             gap: 1rem;
-            align-items: center;
         }
         
-        .settings-bar label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .settings-bar input {
-            background-color: var(--secondary);
-            color: var(--text);
-            border: 1px solid var(--primary);
-            padding: 0.5rem;
-            border-radius: 4px;
-            width: 80px;
-        }
-        
-        .settings-bar button {
+        .btn {
             background-color: var(--primary);
             color: var(--text);
             border: none;
@@ -104,16 +121,29 @@ $edpi = $_SESSION['edpi'] ?? 400; // Valor padrão
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
-            transition: transform 0.2s;
+            transition: transform 0.2s, background-color 0.2s;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
-        .settings-bar button:hover {
+        .btn:hover {
             transform: scale(1.05);
+        }
+        
+        .btn-secondary {
+            background-color: var(--accent);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #3a4c6a;
         }
         
         .modes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 2rem;
             margin-top: 2rem;
         }
@@ -218,30 +248,34 @@ $edpi = $_SESSION['edpi'] ?? 400; // Valor padrão
         </header>
         
         <div class="settings-bar">
-            <form method="POST" action="config.php">
-                <label>
-                    DPI:
-                    <input type="number" name="dpi" value="<?= $_SESSION['dpi'] ?>" required>
-            </label>
-            
-                <label>
-                    Sensibilidade:
-                    <input type="number" step="0.1" name="sens" value="<?= $_SESSION['sens'] ?>" required>
-            </label>
-            
-                <button type="submit">Salvar Configurações</button>
-        </form>
-            
-            <div>
-                <strong>eDPI:</strong> <?= $_SESSION['edpi'] ?>
-            </div>
+            <div class="settings-info">
+                <div class="settings-value">
+                    <div class="settings-number"><?= $_SESSION['settings']['dpi'] ?></div>
+                    <div class="settings-label">DPI</div>
+                </div>
+                
+                <div class="settings-value">
+                    <div class="settings-number"><?= $_SESSION['settings']['sens'] ?></div>
+                    <div class="settings-label">Sensibilidade</div>
     </div>
 
+                <div class="settings-value">
+                    <div class="settings-number"><?= $edpi ?></div>
+                    <div class="settings-label">eDPI</div>
+                </div>
+            </div>
+            
+            <div class="settings-actions">
+                <a href="stats.php" class="btn btn-secondary">Ver Estatísticas</a>
+                <a href="settings.php" class="btn">Configurações Avançadas</a>
+            </div>
+        </div>
+        
         <h2>Escolha seu modo de treino</h2>
         
         <div class="modes-grid">
             <div class="mode-card">
-                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1560253023-3ec5d502959f?auto=format&fit=crop&q=80&w=2000')"></div>
+                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1616530940355-351fabd9524b?auto=format&fit=crop&q=80&w=2000')"></div>
                 <div class="mode-content">
                     <div class="difficulty">
                         <span class="difficulty-point active"></span>
@@ -255,7 +289,7 @@ $edpi = $_SESSION['edpi'] ?? 400; // Valor padrão
             </div>
             
             <div class="mode-card">
-                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&q=80&w=2000')"></div>
+                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1612287230202-1ff1d85d1bfb?auto=format&fit=crop&q=80&w=2000')"></div>
                 <div class="mode-content">
                     <div class="difficulty">
                         <span class="difficulty-point active"></span>
@@ -269,7 +303,7 @@ $edpi = $_SESSION['edpi'] ?? 400; // Valor padrão
             </div>
             
             <div class="mode-card">
-                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2000')"></div>
+                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1608111283358-aca5cca1b479?auto=format&fit=crop&q=80&w=2000')"></div>
                 <div class="mode-content">
                     <div class="difficulty">
                         <span class="difficulty-point active"></span>
@@ -283,7 +317,7 @@ $edpi = $_SESSION['edpi'] ?? 400; // Valor padrão
             </div>
             
             <div class="mode-card">
-                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1551103782-8ab07afd45c1?auto=format&fit=crop&q=80&w=2000')"></div>
+                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?auto=format&fit=crop&q=80&w=2000')"></div>
                 <div class="mode-content">
                     <div class="difficulty">
                         <span class="difficulty-point active"></span>
@@ -297,7 +331,7 @@ $edpi = $_SESSION['edpi'] ?? 400; // Valor padrão
             </div>
             
             <div class="mode-card">
-                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?auto=format&fit=crop&q=80&w=2000')"></div>
+                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1607853554439-0069ec0f29b6?auto=format&fit=crop&q=80&w=2000')"></div>
                 <div class="mode-content">
                     <div class="difficulty">
                         <span class="difficulty-point active"></span>
@@ -305,13 +339,13 @@ $edpi = $_SESSION['edpi'] ?? 400; // Valor padrão
                         <span class="difficulty-point active"></span>
                     </div>
                     <h3 class="mode-title">Micro Ajustes</h3>
-                    <p class="mode-description">Melhore sua capacidade de realizar pequenos ajustes na mira. Perfeito para melhorar spray control.</p>
+                    <p class="mode-description">Melhore sua capacidade de realizar pequenos ajustes na mira. Perfeito para melhorar spray control e recoil.</p>
                     <a href="micro-adjust.php" class="mode-btn">Iniciar Treino</a>
                 </div>
             </div>
             
             <div class="mode-card">
-                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80&w=2000')"></div>
+                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1590422749897-47726d1b0b6d?auto=format&fit=crop&q=80&w=2000')"></div>
                 <div class="mode-content">
                     <div class="difficulty">
                         <span class="difficulty-point active"></span>
@@ -319,14 +353,14 @@ $edpi = $_SESSION['edpi'] ?? 400; // Valor padrão
                         <span class="difficulty-point active"></span>
                     </div>
                     <h3 class="mode-title">Target Switching</h3>
-                    <p class="mode-description">Treine para alternar rapidamente entre alvos. Essencial para situações de múltiplos inimigos.</p>
+                    <p class="mode-description">Treine para alternar rapidamente entre alvos. Essencial para situações de múltiplos inimigos e clutches.</p>
                     <a href="switching.php" class="mode-btn">Iniciar Treino</a>
                 </div>
             </div>
         </div>
         
         <footer>
-            <p>© 2023 Valorant Aim Trainer | Inspirado pelo jogo Valorant da Riot Games</p>
+            <p>© 2025 Valorant Aim Trainer | Inspirado pelo jogo Valorant da Riot Games</p>
             <p>Este é um projeto não oficial e não tem afiliação com a Riot Games.</p>
         </footer>
     </div>
