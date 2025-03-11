@@ -1,20 +1,20 @@
 <?php
-session_start();
-
-// Obter todas as pontuações armazenadas
-$modes = [
-    'precision' => ['name' => 'Precisão', 'icon' => '🎯'],
-    'reflex' => ['name' => 'Reflexo', 'icon' => '⚡'],
-    'tracking' => ['name' => 'Tracking', 'icon' => '👁️'],
-    'flick' => ['name' => 'Flick', 'icon' => '💨'],
-    'microadjust' => ['name' => 'Micro Ajustes', 'icon' => '🔍'],
-    'switching' => ['name' => 'Target Switching', 'icon' => '↔️']
-];
+require_once 'common.php';
 
 // Pontuações simuladas - num sistema real, isso viria de um banco de dados
 // Para simulação, vamos criar um histórico fictício se não existir
 if (!isset($_SESSION['history'])) {
     $_SESSION['history'] = [];
+    
+    // Configuração dos modos
+    $modes = [
+        'precision' => ['name' => 'Precisão', 'icon' => '🎯'],
+        'reflex' => ['name' => 'Reflexo', 'icon' => '⚡'],
+        'tracking' => ['name' => 'Tracking', 'icon' => '👁️'],
+        'flick' => ['name' => 'Flick', 'icon' => '💨'],
+        'microadjust' => ['name' => 'Micro Ajustes', 'icon' => '🔍'],
+        'switching' => ['name' => 'Target Switching', 'icon' => '↔️']
+    ];
     
     // Datas para os últimos 30 dias
     $dates = [];
@@ -50,6 +50,16 @@ if (!isset($_SESSION['history'])) {
         return $dateB - $dateA; // Ordem decrescente (mais recente primeiro)
     });
 }
+
+// Configuração dos modos
+$modes = [
+    'precision' => ['name' => 'Precisão', 'icon' => '🎯'],
+    'reflex' => ['name' => 'Reflexo', 'icon' => '⚡'],
+    'tracking' => ['name' => 'Tracking', 'icon' => '👁️'],
+    'flick' => ['name' => 'Flick', 'icon' => '💨'],
+    'microadjust' => ['name' => 'Micro Ajustes', 'icon' => '🔍'],
+    'switching' => ['name' => 'Target Switching', 'icon' => '↔️']
+];
 
 // Obter recordes
 $highscores = [];
@@ -112,16 +122,7 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --primary: #ff4655;
-            --secondary: #0f1923;
-            --text: #f9f9f9;
-            --accent: #28344a;
-            --accent-light: #3a4a66;
-            --card-bg: #1a2634;
-            --success: #3edd87;
-            --warning: #f7c948;
-        }
+        <?= getThemeCSS() ?>
         
         * {
             margin: 0;
@@ -200,7 +201,7 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
         }
         
         .stat-card {
-            background-color: var(--card-bg);
+            background-color: var(--accent);
             border-radius: 8px;
             padding: 1.5rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -214,7 +215,7 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
             align-items: center;
             margin-bottom: 1rem;
             padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--accent);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .stat-card-title {
@@ -241,7 +242,7 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
         .progress-bar-container {
             width: 100%;
             height: 8px;
-            background-color: var(--accent);
+            background-color: var(--secondary);
             border-radius: 4px;
             overflow: hidden;
             margin: 0.5rem 0;
@@ -253,7 +254,7 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
         }
         
         .chart-container {
-            background-color: var(--card-bg);
+            background-color: var(--accent);
             border-radius: 8px;
             padding: 1.5rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -273,13 +274,14 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
             color: var(--primary);
         }
         
-        canvas {
-            width: 100%;
+        .chart-wrapper {
+            position: relative;
             height: 300px;
+            width: 100%;
         }
         
         .history-container {
-            background-color: var(--card-bg);
+            background-color: var(--accent);
             border-radius: 8px;
             padding: 1.5rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -298,7 +300,7 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
         }
         
         thead {
-            background-color: var(--accent);
+            background-color: var(--secondary);
             color: var(--text);
         }
         
@@ -312,11 +314,11 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
         }
         
         tbody tr {
-            border-bottom: 1px solid var(--accent);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         tbody tr:hover {
-            background-color: var(--accent-light);
+            background-color: var(--secondary);
         }
         
         .mode-badge {
@@ -325,7 +327,7 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
             border-radius: 4px;
             font-size: 0.8rem;
             font-weight: bold;
-            background-color: var(--accent);
+            background-color: var(--secondary);
         }
         
         .mode-badge.precision { background-color: #ff4655; }
@@ -346,7 +348,7 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
             flex-direction: column;
             align-items: center;
             padding: 1rem;
-            background-color: var(--accent);
+            background-color: var(--secondary);
             border-radius: 8px;
         }
         
@@ -423,7 +425,9 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
                     <!-- Poderíamos adicionar filtros aqui -->
                 </div>
             </div>
-            <canvas id="progressChart"></canvas>
+            <div class="chart-wrapper">
+                <canvas id="progressChart"></canvas>
+            </div>
         </div>
         
         <!-- Modos mais jogados -->
@@ -498,14 +502,19 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
         // Configurar o gráfico de evolução
         const ctx = document.getElementById('progressChart').getContext('2d');
         
+        // Capturar as cores do tema para usar no gráfico
+        const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+        const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--secondary').trim();
+        const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+        
         // Dados para o gráfico
         const chartData = {
             labels: <?= json_encode($chart_dates) ?>,
             datasets: [{
                 label: 'Pontuação Média',
                 data: <?= json_encode($chart_data) ?>,
-                backgroundColor: 'rgba(255, 70, 85, 0.2)',
-                borderColor: 'rgba(255, 70, 85, 1)',
+                backgroundColor: primaryColor.includes('#') ? `${primaryColor}33` : `rgba(255, 70, 85, 0.2)`, // Com transparência
+                borderColor: primaryColor.includes('#') ? primaryColor : 'rgba(255, 70, 85, 1)',
                 borderWidth: 2,
                 tension: 0.4,
                 fill: true
@@ -523,16 +532,16 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
                     legend: {
                         display: true,
                         labels: {
-                            color: '#f9f9f9'
+                            color: textColor
                         }
                     },
                     tooltip: {
                         mode: 'index',
                         intersect: false,
-                        backgroundColor: '#28344a',
-                        titleColor: '#ff4655',
-                        bodyColor: '#f9f9f9',
-                        borderColor: '#f9f9f9',
+                        backgroundColor: secondaryColor,
+                        titleColor: primaryColor,
+                        bodyColor: textColor,
+                        borderColor: textColor,
                         borderWidth: 1
                     }
                 },
@@ -543,7 +552,7 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
                             color: 'rgba(255, 255, 255, 0.1)'
                         },
                         ticks: {
-                            color: '#f9f9f9'
+                            color: textColor
                         }
                     },
                     x: {
@@ -551,7 +560,7 @@ arsort($mode_counts); // Ordenar por contagem (decrescente)
                             color: 'rgba(255, 255, 255, 0.1)'
                         },
                         ticks: {
-                            color: '#f9f9f9'
+                            color: textColor
                         }
                     }
                 }
