@@ -123,102 +123,45 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
             flex-grow: 1;
             position: relative;
             background-color: #151f2e;
-            background-image: 
-                radial-gradient(circle, rgba(255, 70, 85, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
             cursor: crosshair;
             overflow: hidden;
+        }
+        
+        .crosshair {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .spray-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
         
         .target {
             position: absolute;
             border-radius: 50%;
-            transition: transform 0.2s;
-            cursor: crosshair;
+            background-color: rgba(255, 70, 85, 0.3);
+            border: 2px solid var(--primary);
+            transition: all 0.3s ease;
         }
         
-        .target-container {
-            position: absolute;
-            transform: translate(-50%, -50%);
-        }
-        
-        .target .inner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 50%;
-            height: 50%;
-            border-radius: 50%;
-            background-color: var(--secondary);
-        }
-        
-        .target .center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 15%;
-            height: 15%;
-            border-radius: 50%;
+        .target.active {
             background-color: var(--primary);
+            transform: scale(1.2);
         }
         
-        .micro-target {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: var(--primary);
-            transform: translate(-50%, -50%);
-            transition: all 0.2s;
-        }
-        
-        .micro-target.hit {
-            background-color: var(--success);
-            transform: translate(-50%, -50%) scale(1.5);
-        }
-        
-        #crosshair {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: white;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 100;
-            opacity: 0.8;
-        }
-        
-        .spray-pattern {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 120px;
-            height: 120px;
-            border-radius: 4px;
-            border: 1px dashed rgba(255, 255, 255, 0.2);
-            z-index: 1;
-        }
-        
-        .progress-container {
-            width: 100%;
-            height: 5px;
-            background-color: var(--secondary);
-            border-radius: 2px;
-            overflow: hidden;
-            position: absolute;
-            bottom: 0;
-            left: 0;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background-color: var(--primary);
-            transition: width 1s linear;
-            width: 100%;
+        .target.hit {
+            background-color: rgba(0, 255, 100, 0.5);
+            border-color: rgba(0, 255, 100, 0.8);
         }
         
         #countdown {
@@ -319,23 +262,12 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
         }
         
         .pattern-preview {
-            margin: 1rem auto;
-            width: 120px;
-            height: 120px;
-            border-radius: 4px;
-            border: 1px dashed rgba(255, 255, 255, 0.2);
+            width: 100px;
+            height: 100px;
+            background-color: rgba(15, 25, 35, 0.7);
+            margin: 0 auto 20px;
             position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .pattern-preview .dot {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background: rgba(255, 70, 85, 0.8);
+            border-radius: 4px;
         }
         
         /* Adicionando estilo para botão de dificuldade selecionado */
@@ -371,8 +303,8 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
                     <div class="stat-label">Precisão</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value" id="targets-hit">0/0</div>
-                    <div class="stat-label">Alvos</div>
+                    <div class="stat-value" id="targets-hit">0</div>
+                    <div class="stat-label">Alvos Acertados</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" id="timer">60</div>
@@ -386,12 +318,11 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
         </div>
         
         <div class="arena" id="arena">
-            <div id="crosshair"></div>
-            <div id="spray-pattern" class="spray-pattern"></div>
-            <div id="countdown" class="hide"></div>
-            <div class="progress-container">
-                <div class="progress-bar" id="progress-bar"></div>
+            <div class="crosshair" id="crosshair"></div>
+            <div class="spray-pattern" id="spray-pattern">
+                <!-- Pattern will be created dynamically -->
             </div>
+            <div id="countdown" class="hide"></div>
         </div>
         
         <!-- Overlay inicial -->
@@ -417,12 +348,12 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
                 
                 <h3>Selecione a Dificuldade:</h3>
                 <div class="difficulty-controls">
-                    <button type="button" onclick="selectDifficulty('easy', this)" class="difficulty-btn active">Fácil</button>
-                    <button type="button" onclick="selectDifficulty('medium', this)" class="difficulty-btn">Médio</button>
-                    <button type="button" onclick="selectDifficulty('hard', this)" class="difficulty-btn">Difícil</button>
+                    <button class="btn difficulty-btn" data-difficulty="easy">Fácil</button>
+                    <button class="btn difficulty-btn" data-difficulty="medium">Médio</button>
+                    <button class="btn difficulty-btn" data-difficulty="hard">Difícil</button>
                 </div>
                 
-                <button type="button" onclick="startTraining()" id="start-btn" class="btn">Iniciar Treino</button>
+                <button id="start-btn" class="btn">Iniciar Treino</button>
             </div>
         </div>
         
@@ -437,16 +368,12 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
                         <span class="score-value" id="final-score">0</span>
                     </div>
                     <div class="score-item">
+                        <span class="score-label">Alvos Acertados:</span>
+                        <span class="score-value" id="final-targets">0</span>
+                    </div>
+                    <div class="score-item">
                         <span class="score-label">Precisão:</span>
                         <span class="score-value" id="final-precision">0%</span>
-                    </div>
-                    <div class="score-item">
-                        <span class="score-label">Alvos Acertados:</span>
-                        <span class="score-value" id="final-targets-hit">0/0</span>
-                    </div>
-                    <div class="score-item">
-                        <span class="score-label">Tempo Médio de Ajuste:</span>
-                        <span class="score-value" id="final-avg-time">0ms</span>
                     </div>
                     <div class="score-item">
                         <span class="score-label">Padrões Completados:</span>
@@ -469,31 +396,8 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
     <div class="countdown hide" id="countdown">3</div>
 
     <script>
-        // Variável global para dificuldade
-        let difficulty = 'easy';
-        
-        // Função para selecionar dificuldade
-        function selectDifficulty(diff, button) {
-            console.log("Dificuldade selecionada:", diff);
-            difficulty = diff;
-            
-            // Remover classe active de todos os botões
-            document.querySelectorAll('.difficulty-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Adicionar classe active ao botão clicado
-            button.classList.add('active');
-        }
-        
-        // Função para iniciar o treinamento
-        function startTraining() {
-            console.log("Iniciando treinamento com dificuldade:", difficulty);
-            startCountdown();
-        }
-        
         // Configurações baseadas no PHP
-        const edpi = <?= $_SESSION['settings']['edpi'] ?>;
+        const edpi = <?= $_SESSION['settings']['edpi'] ?? 400 ?>;
         
         // Variáveis do jogo
         let gameActive = false;
@@ -503,6 +407,7 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
         let targetsCreated = 0;
         let timeLeft = 60;
         let timeInterval;
+        let difficulty = 'medium'; // Padrão
         let adjustTimes = [];
         let patternsCompleted = 0;
         let currentPattern = [];
@@ -517,11 +422,56 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
         const precisionElement = document.getElementById('precision');
         const targetsHitElement = document.getElementById('targets-hit');
         const timerElement = document.getElementById('timer');
-        const progressBar = document.getElementById('progress-bar');
         const startOverlay = document.getElementById('start-overlay');
         const resultOverlay = document.getElementById('result-overlay');
+        const startButton = document.getElementById('start-btn');
+        const restartButton = document.getElementById('restart-btn');
+        const restartButtonResult = document.getElementById('restart-btn-result');
         const countdownElement = document.getElementById('countdown');
+        const difficultyButtons = document.querySelectorAll('.difficulty-btn');
         const patternPreview = document.getElementById('pattern-preview');
+        
+        // Configurações de dificuldade
+        const difficultySettings = {
+            easy: {
+                pointCount: 5,
+                pointSize: 30,
+                showTime: 500,
+                tolerance: 30
+            },
+            medium: {
+                pointCount: 7,
+                pointSize: 25,
+                showTime: 400,
+                tolerance: 20
+            },
+            hard: {
+                pointCount: 10,
+                pointSize: 20,
+                showTime: 300,
+                tolerance: 15
+            }
+        };
+        
+        // Event listeners
+        startButton.addEventListener('click', startCountdown);
+        restartButton.addEventListener('click', restartGame);
+        restartButtonResult.addEventListener('click', restartGame);
+        
+        difficultyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                difficulty = button.dataset.difficulty;
+                
+                // Atualizar UI para mostrar a dificuldade selecionada
+                difficultyButtons.forEach(btn => {
+                    btn.classList.remove('btn-secondary');
+                });
+                button.classList.add('btn-secondary');
+                
+                // Atualizar preview
+                updatePatternPreview();
+            });
+        });
         
         // Função para iniciar a contagem regressiva
         function startCountdown() {
@@ -560,214 +510,107 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
             // Atualizar UI
             updateStats();
             
-            // Configurar área de padrão
-            const settings = difficultySettings[difficulty];
-            sprayPattern.style.width = `${settings.patternSize}px`;
-            sprayPattern.style.height = `${settings.patternSize}px`;
-            
-            // Posicionar no centro
-            const arenaRect = arena.getBoundingClientRect();
-            sprayPattern.style.left = `${arenaRect.width / 2}px`;
-            sprayPattern.style.top = `${arenaRect.height / 2}px`;
+            // Posicionar ponto de referência
+            positionReferencePoint();
             
             // Iniciar timer
             timeInterval = setInterval(() => {
                 timeLeft--;
                 timerElement.textContent = timeLeft;
-                progressBar.style.width = `${(timeLeft / 60) * 100}%`;
                 
                 if (timeLeft <= 0) {
                     endGame();
                 }
             }, 1000);
             
-            // Iniciar padrão
-            startNewPattern();
+            // Criar primeiro alvo
+            createTarget();
         }
         
-        // Função para iniciar um novo padrão
-        function startNewPattern() {
+        // Função para posicionar o ponto de referência
+        function positionReferencePoint() {
+            const arenaRect = arena.getBoundingClientRect();
+            const x = arenaRect.width / 2;
+            const y = arenaRect.height / 2;
+            
+            // Implemente a lógica para posicionar o ponto de referência
+        }
+        
+        // Função para criar um alvo
+        function createTarget() {
             if (!gameActive) return;
-            
-            // Limpar alvos existentes
-            document.querySelectorAll('.micro-target').forEach(target => target.remove());
-            
-            // Escolher um padrão aleatório
-            const patternIndex = Math.floor(Math.random() * recoilPatterns.length);
-            const settings = difficultySettings[difficulty];
-            
-            // Obter o subconjunto de pontos baseado na dificuldade
-            currentPattern = recoilPatterns[patternIndex].slice(0, settings.pointCount);
-            currentTargetIndex = 0;
-            patternStartTime = Date.now();
-            
-            // Criar o primeiro ponto
-            createNextTarget();
-        }
-        
-        // Função para criar o próximo alvo do padrão
-        function createNextTarget() {
-            if (!gameActive || currentTargetIndex >= currentPattern.length) return;
             
             const settings = difficultySettings[difficulty];
-            const point = currentPattern[currentTargetIndex];
-            const patternRect = sprayPattern.getBoundingClientRect();
+            const arenaRect = arena.getBoundingClientRect();
             
-            // Calcular posição central do padrão
-            const centerX = patternRect.left + patternRect.width / 2;
-            const centerY = patternRect.top + patternRect.height / 2;
-            
-            // Criar micro target
-            const target = document.createElement('div');
-            target.className = 'micro-target';
-            target.style.width = `${settings.pointSize}px`;
-            target.style.height = `${settings.pointSize}px`;
-            target.style.left = `${centerX + point.x}px`;
-            target.style.top = `${centerY + point.y}px`;
-            
-            // Se for o primeiro alvo, destacá-lo
-            if (currentTargetIndex === 0) {
-                target.style.width = `${settings.pointSize * 1.5}px`;
-                target.style.height = `${settings.pointSize * 1.5}px`;
-                target.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+            // Remover alvo anterior se existir
+            if (currentTarget) {
+                currentTarget.remove();
             }
             
-            arena.appendChild(target);
-            targetsCreated++;
+            // Criar novo alvo
+            currentTarget = document.createElement('div');
+            currentTarget.className = 'target';
             
-            // Configurar timeout para erro
-            setTimeout(() => {
-                if (target.parentNode && !target.classList.contains('hit')) {
-                    target.remove();
-                    handleMiss(centerX + point.x, centerY + point.y);
-                }
-            }, settings.targetTimeout);
-        }
-        
-        // Função para lidar com um acerto
-        function handleHit(target, x, y) {
-            if (!gameActive) return;
-            
-            // Calcular tempo de ajuste
-            const adjustTime = currentTargetIndex === 0 ? 
-                0 : Date.now() - (patternStartTime + currentTargetIndex * difficultySettings[difficulty].pointInterval);
-            
-            if (adjustTime > 0) {
-                adjustTimes.push(adjustTime);
-            }
-            
-            // Marcar alvo como acertado
-            target.classList.add('hit');
-            hits++;
-            
-            // Adicionar pontos
-            const pointValue = 10 * (currentTargetIndex + 1); // Mais pontos para alvos posteriores na sequência
-            score += pointValue;
-            
-            // Mostrar feedback
-            showFeedback(x, y, adjustTime, pointValue, true);
-            
-            // Tocar som
-            playHitSound();
-            
-            // Atualizar estatísticas
-            updateStats();
-            
-            // Avançar para o próximo alvo ou iniciar novo padrão
-            currentTargetIndex++;
-            
-            if (currentTargetIndex < currentPattern.length) {
-                // Próximo alvo após um intervalo
-                setTimeout(() => {
-                    if (gameActive) createNextTarget();
-                }, difficultySettings[difficulty].pointInterval);
-            } else {
-                // Completou o padrão!
-                patternsCompleted++;
+            // Calcular posição aleatória (mas não muito perto do ponto de referência)
+            let x, y, distance;
+            do {
+                x = Math.random() * (arenaRect.width - settings.pointSize);
+                y = Math.random() * (arenaRect.height - settings.pointSize);
                 
-                // Bônus por completar o padrão
-                const patternBonus = 50 * difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : 3;
-                score += patternBonus;
-                
-                // Mostrar feedback de padrão completo
-                const patternRect = sprayPattern.getBoundingClientRect();
-                showFeedback(
-                    patternRect.left + patternRect.width / 2, 
-                    patternRect.top + patternRect.height / 2, 
-                    0, 
-                    patternBonus, 
-                    true, 
-                    'PADRÃO COMPLETO!'
-                );
-                
-                // Iniciar novo padrão após um intervalo
-                setTimeout(() => {
-                    if (gameActive) startNewPattern();
-                }, 1500);
-            }
-        }
-        
-        // Função para lidar com um erro
-        function handleMiss(x, y) {
-            if (!gameActive) return;
+                const dx = x - referencePointPos.x;
+                const dy = y - referencePointPos.y;
+                distance = Math.sqrt(dx * dx + dy * dy);
+            } while (distance < 100); // Pelo menos 100px de distância
             
-            misses++;
-            
-            // Penalidade de pontos
-            const penalty = -5;
-            score = Math.max(0, score + penalty);
-            
-            // Mostrar feedback
-            showFeedback(x, y, 0, penalty, false);
-            
-            // Atualizar estatísticas
-            updateStats();
-            
-            // Seguir para o próximo alvo de qualquer forma
-            currentTargetIndex++;
-            
-            if (currentTargetIndex < currentPattern.length) {
-                // Próximo alvo após um intervalo
-                setTimeout(() => {
-                    if (gameActive) createNextTarget();
-                }, difficultySettings[difficulty].pointInterval);
-            } else {
-                // Iniciar novo padrão após um intervalo
-                setTimeout(() => {
-                    if (gameActive) startNewPattern();
-                }, 1500);
-            }
-        }
-        
-        // Função para mostrar feedback visual
-        function showFeedback(x, y, time, points, isHit, text) {
-            const feedback = document.createElement('div');
-            feedback.className = 'feedback';
-            
-            // Configurar cor baseada em acerto/erro
-            const color = isHit ? points >= 20 ? 'var(--success)' : 'var(--warning)' : 'var(--error)';
-            
-            // Configurar texto
-            if (text) {
-                feedback.textContent = text;
-            } else {
-                feedback.textContent = `${isHit ? (time > 0 ? time + 'ms ' : '') + '+' : ''}${points}`;
-            }
-            
-            feedback.style.color = color;
-            feedback.style.left = `${x}px`;
-            feedback.style.top = `${y - 20}px`;
-            feedback.style.transform = 'translateX(-50%)';
+            currentTarget.style.width = `${settings.pointSize}px`;
+            currentTarget.style.height = `${settings.pointSize}px`;
+            currentTarget.style.left = `${x}px`;
+            currentTarget.style.top = `${y}px`;
             
             // Adicionar ao arena
-            arena.appendChild(feedback);
+            arena.appendChild(currentTarget);
             
-            // Remover após animação
+            // Registrar tempo de criação
+            targetCreationTime = Date.now();
+            
+            // Adicionar evento de clique
+            currentTarget.addEventListener('click', handleTargetClick);
+            
+            // Auto-ocultar após tempo definido
             setTimeout(() => {
-                if (feedback.parentNode) {
-                    feedback.remove();
+                if (currentTarget && gameActive) {
+                    currentTarget.remove();
+                    createTarget();
                 }
-            }, 1000);
+            }, settings.showTime);
+        }
+        
+        // Função para lidar com clique no alvo
+        function handleTargetClick() {
+            if (!gameActive) return;
+            
+            // Calcular tempo de reação
+            const reactionTime = Date.now() - targetCreationTime;
+            adjustTimes.push(reactionTime);
+            
+            // Calcular distância do flick
+            const targetRect = currentTarget.getBoundingClientRect();
+            const targetX = targetRect.left + targetRect.width / 2;
+            const targetY = targetRect.top + targetRect.height / 2;
+            
+            const dx = targetX - referencePointPos.x;
+            const dy = targetY - referencePointPos.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Atualizar pontuação
+            score += 10;
+            
+            // Atualizar estatísticas
+            updateStats();
+            
+            // Criar próximo alvo
+            createTarget();
         }
         
         // Função para atualizar estatísticas na UI
@@ -785,19 +628,14 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
             gameActive = false;
             clearInterval(timeInterval);
             
-            // Remover alvos
-            document.querySelectorAll('.micro-target').forEach(target => target.remove());
+            if (currentTarget) {
+                currentTarget.remove();
+                currentTarget = null;
+            }
             
             // Calcular estatísticas finais
-            const totalAttempts = hits + misses;
-            const precision = totalAttempts > 0 ? Math.round((hits / totalAttempts) * 100) : 0;
-            
-            let avgAdjustTime = 0;
-            if (adjustTimes.length > 0) {
-                avgAdjustTime = Math.round(
-                    adjustTimes.reduce((sum, time) => sum + time, 0) / adjustTimes.length
-                );
-            }
+            const avgReactionTime = adjustTimes.length > 0 ? 
+                Math.round(adjustTimes.reduce((sum, time) => sum + time, 0) / adjustTimes.length : 0;
             
             // Verificar se é um novo recorde
             const oldHighscore = <?= $highscore ?>;
@@ -805,9 +643,8 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
             
             // Atualizar overlay de resultados
             document.getElementById('final-score').textContent = score;
+            document.getElementById('final-targets').textContent = hits;
             document.getElementById('final-precision').textContent = `${precision}%`;
-            document.getElementById('final-targets-hit').textContent = `${hits}/${targetsCreated}`;
-            document.getElementById('final-avg-time').textContent = `${avgAdjustTime}ms`;
             document.getElementById('final-patterns').textContent = patternsCompleted;
             document.getElementById('final-highscore').textContent = isNewHighscore ? 'Sim!' : 'Não';
             
@@ -836,9 +673,10 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
             startCountdown();
         }
         
-        // Função para tocar som de acerto
-        function playHitSound() {
-            const audio = new Audio('data:audio/wav;base64,//uQRAAAAWMSLwUIYAAsYkXgoQwAEaYLWfkWgAI0wWs/ItAAAGDgYtAgAyN+QWaAAihwMWm4G8QQRDiMcCBcH3Cc+CDv/7xA4Tvh9Rz/y8QADBwMWgQAZG/ILNAARQ4GLTcDeIIIhxGOBAuD7hOfBB3/94gcJ3w+o5/5eIAIAAAVwWgQAVQ2ORaIQwEMAJiDg95G4nQL7mQVWI6GwRcfsZAcsKkJvxgxEjzFUgfHoSQ9Qq7KNwqHwuB13MA4a1q/DmBrHgPcmjiGoh//EwC5nGPEmS4RcfkVKOhJf+WOgoxJclFz3kgn//dBA+ya1GhurNn8zb//9NNutNuhz31f////9vt///z+IdAEAAAK4LQIAKobHItEIYCGAExBwe8jcToF9zIKrEdDYIuP2MgOWFSE34wYiR5iqQPj0JIeoVdlG4VD4XA67mAcNa1fhzA1jwHuTRxDUQ//iYBczjHiTJcIuPyKlHQkv/LHQUYkuSi57yQT//uggfZNajQ3Vmz+Zt//+mm3Wm3Q576v////+32///5/EOgAAADVghQAAAAA//uQZAUAB1WI0PZugAAAAAoQwAAAEk3nRd2qAAAAACiDgAAAAAAABCqEEQRLCgwpBGMlJkIz8jKhGvj4k6jzRnqasNKIeoh5gI7BJaC1A1AoNBjJgbyApVS4IDlZgDU5WUAxEKDNmmALHzZp0Fkz1FMTmGFl1FMEyodIavcCAUHDWrKAIA4aa2oCgILEBupZgHvAhEBcZ6joQBxS76AgccrFlczBvKLC0QI2cBoCFvfTDAo7eoOQInqDPBtvrDEZBNYN5xwNwxQRfw8ZQ5wQVLvO8OYU+mHvFLlDh05Mdg7BT6YrRPpCBznMB2r//xKJjyyOh+cImr2/4doscwD6neZjuZR4AgAABYAAAABy1xcdQtxYBYYZdifkU
-        </script>
-    </body>
+        // Função para atualizar o preview do padrão
+        function updatePatternPreview() {
+            // Implemente a lógica para atualizar o preview do padrão
+        }
+    </script>
+</body>
 </html> 
