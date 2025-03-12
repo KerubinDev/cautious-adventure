@@ -473,6 +473,41 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
             });
         });
         
+        // Movimento do mouse para o crosshair
+        arena.addEventListener('mousemove', (e) => {
+            const arenaRect = arena.getBoundingClientRect();
+            const x = e.clientX - arenaRect.left;
+            const y = e.clientY - arenaRect.top;
+            
+            crosshair.style.left = `${x}px`;
+            crosshair.style.top = `${y}px`;
+            
+            if (gameActive && currentPattern.length > 0 && currentTargetIndex < currentPattern.length) {
+                checkTargetProximity(x, y);
+            }
+        });
+        
+        // Função para atualizar o preview do padrão
+        function updatePatternPreview() {
+            patternPreview.innerHTML = '';
+            
+            const settings = difficultySettings[difficulty];
+            const previewSize = 100;
+            const pointSize = Math.max(10, settings.pointSize / 2);
+            
+            const point = document.createElement('div');
+            point.className = 'target';
+            point.style.width = `${pointSize}px`;
+            point.style.height = `${pointSize}px`;
+            point.style.left = `${previewSize / 2 - pointSize / 2}px`;
+            point.style.top = `${previewSize / 2 - pointSize / 2}px`;
+            
+            patternPreview.appendChild(point);
+        }
+        
+        // Inicializar o preview
+        updatePatternPreview();
+        
         // Função para iniciar a contagem regressiva
         function startCountdown() {
             startOverlay.classList.add('hide');
@@ -505,13 +540,14 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
             timeLeft = 60;
             adjustTimes = [];
             patternsCompleted = 0;
+            currentPattern = [];
             currentTargetIndex = 0;
+            
+            // Limpar qualquer padrão anterior
+            sprayPattern.innerHTML = '';
             
             // Atualizar UI
             updateStats();
-            
-            // Posicionar ponto de referência
-            positionReferencePoint();
             
             // Iniciar timer
             timeInterval = setInterval(() => {
@@ -523,104 +559,128 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
                 }
             }, 1000);
             
-            // Criar primeiro alvo
-            createTarget();
+            // Criar primeiro padrão
+            createPattern();
         }
         
-        // Função para posicionar o ponto de referência
-        function positionReferencePoint() {
-            const arenaRect = arena.getBoundingClientRect();
-            const x = arenaRect.width / 2;
-            const y = arenaRect.height / 2;
-            
-            // Implemente a lógica para posicionar o ponto de referência
-        }
-        
-        // Função para criar um alvo
-        function createTarget() {
+        // Função para criar um padrão
+        function createPattern() {
             if (!gameActive) return;
             
             const settings = difficultySettings[difficulty];
             const arenaRect = arena.getBoundingClientRect();
             
-            // Remover alvo anterior se existir
-            if (currentTarget) {
-                currentTarget.remove();
+            // Limpar padrão anterior
+            sprayPattern.innerHTML = '';
+            currentPattern = [];
+            currentTargetIndex = 0;
+            
+            // Ponto central (primeira posição)
+            const centerX = arenaRect.width / 2;
+            const centerY = arenaRect.height / 2;
+            
+            // Criar pontos do padrão
+            for (let i = 0; i < settings.pointCount; i++) {
+                let x, y;
+                
+                if (i === 0) {
+                    // Primeiro ponto é sempre no centro
+                    x = centerX;
+                    y = centerY;
+                } else {
+                    // Outros pontos são baseados no anterior, simulando um padrão de recoil
+                    const prevPoint = currentPattern[i - 1];
+                    const offsetX = (Math.random() - 0.5) * 60;
+                    const offsetY = -Math.random() * 60; // Sempre para cima (simulando recoil)
+                    
+                    x = prevPoint.x + offsetX;
+                    y = prevPoint.y + offsetY;
+                    
+                    // Garantir que está dentro dos limites
+                    x = Math.max(settings.pointSize, Math.min(arenaRect.width - settings.pointSize, x));
+                    y = Math.max(settings.pointSize, Math.min(arenaRect.height - settings.pointSize, y));
+                }
+                
+                // Adicionar ao padrão
+                currentPattern.push({ x, y });
+                
+                // Criar elemento visual
+                const point = document.createElement('div');
+                point.className = 'target';
+                point.id = `target-${i}`;
+                point.style.width = `${settings.pointSize}px`;
+                point.style.height = `${settings.pointSize}px`;
+                point.style.left = `${x - settings.pointSize / 2}px`;
+                point.style.top = `${y - settings.pointSize / 2}px`;
+                
+                // Tornar invisível inicialmente (exceto o primeiro)
+                if (i > 0) {
+                    point.style.opacity = '0';
+                } else {
+                    point.classList.add('active');
+                    patternStartTime = Date.now();
+                }
+                
+                sprayPattern.appendChild(point);
             }
             
-            // Criar novo alvo
-            currentTarget = document.createElement('div');
-            currentTarget.className = 'target';
-            
-            // Calcular posição aleatória (mas não muito perto do ponto de referência)
-            let x, y, distance;
-            do {
-                x = Math.random() * (arenaRect.width - settings.pointSize);
-                y = Math.random() * (arenaRect.height - settings.pointSize);
-                
-                const dx = x - referencePointPos.x;
-                const dy = y - referencePointPos.y;
-                distance = Math.sqrt(dx * dx + dy * dy);
-            } while (distance < 100); // Pelo menos 100px de distância
-            
-            currentTarget.style.width = `${settings.pointSize}px`;
-            currentTarget.style.height = `${settings.pointSize}px`;
-            currentTarget.style.left = `${x}px`;
-            currentTarget.style.top = `${y}px`;
-            
-            // Adicionar ao arena
-            arena.appendChild(currentTarget);
-            
-            // Registrar tempo de criação
-            targetCreationTime = Date.now();
-            
-            // Adicionar evento de clique
-            currentTarget.addEventListener('click', handleTargetClick);
-            
-            // Auto-ocultar após tempo definido
-            setTimeout(() => {
-                if (currentTarget && gameActive) {
-                    currentTarget.remove();
-                    createTarget();
-                }
-            }, settings.showTime);
+            targetsCreated += settings.pointCount;
         }
         
-        // Função para lidar com clique no alvo
-        function handleTargetClick() {
-            if (!gameActive) return;
+        // Função para verificar proximidade do alvo
+        function checkTargetProximity(x, y) {
+            if (!gameActive || currentTargetIndex >= currentPattern.length) return;
             
-            // Calcular tempo de reação
-            const reactionTime = Date.now() - targetCreationTime;
-            adjustTimes.push(reactionTime);
+            const settings = difficultySettings[difficulty];
+            const currentPoint = currentPattern[currentTargetIndex];
+            const distance = Math.sqrt(
+                Math.pow(x - currentPoint.x, 2) + 
+                Math.pow(y - currentPoint.y, 2)
+            );
             
-            // Calcular distância do flick
-            const targetRect = currentTarget.getBoundingClientRect();
-            const targetX = targetRect.left + targetRect.width / 2;
-            const targetY = targetRect.top + targetRect.height / 2;
-            
-            const dx = targetX - referencePointPos.x;
-            const dy = targetY - referencePointPos.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            // Atualizar pontuação
-            score += 10;
-            
-            // Atualizar estatísticas
-            updateStats();
-            
-            // Criar próximo alvo
-            createTarget();
+            if (distance <= settings.tolerance) {
+                // Acertou o alvo!
+                const targetElement = document.getElementById(`target-${currentTargetIndex}`);
+                targetElement.classList.remove('active');
+                targetElement.classList.add('hit');
+                
+                // Registrar tempo
+                if (currentTargetIndex > 0) {
+                    const adjustTime = Date.now() - patternStartTime;
+                    adjustTimes.push(adjustTime);
+                    patternStartTime = Date.now();
+                    
+                    // Pontuação
+                    hits++;
+                    score += Math.max(10, Math.round(50 - distance));
+                }
+                
+                // Próximo alvo
+                currentTargetIndex++;
+                
+                // Verificar se o padrão foi concluído
+                if (currentTargetIndex >= currentPattern.length) {
+                    patternsCompleted++;
+                    setTimeout(createPattern, 500);
+                } else {
+                    // Mostrar próximo ponto
+                    const nextTarget = document.getElementById(`target-${currentTargetIndex}`);
+                    nextTarget.style.opacity = '1';
+                    nextTarget.classList.add('active');
+                }
+                
+                // Atualizar estatísticas
+                updateStats();
+            }
         }
         
         // Função para atualizar estatísticas na UI
         function updateStats() {
             scoreElement.textContent = score;
+            targetsHitElement.textContent = hits;
             
-            const totalAttempts = hits + misses;
-            const precision = totalAttempts > 0 ? Math.round((hits / totalAttempts) * 100) : 0;
-            precisionElement.textContent = `${precision}%`;
-            targetsHitElement.textContent = `${hits}/${targetsCreated}`;
+            const accuracy = targetsCreated > 0 ? Math.round((hits / (currentTargetIndex + patternsCompleted * difficultySettings[difficulty].pointCount)) * 100) : 0;
+            precisionElement.textContent = `${accuracy}%`;
         }
         
         // Função para finalizar o jogo
@@ -628,14 +688,12 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
             gameActive = false;
             clearInterval(timeInterval);
             
-            if (currentTarget) {
-                currentTarget.remove();
-                currentTarget = null;
-            }
+            // Limpar padrão
+            sprayPattern.innerHTML = '';
             
             // Calcular estatísticas finais
-            const avgReactionTime = adjustTimes.length > 0 ? 
-                Math.round(adjustTimes.reduce((sum, time) => sum + time, 0) / adjustTimes.length : 0;
+            const totalTargets = targetsCreated;
+            const precision = totalTargets > 0 ? Math.round((hits / totalTargets) * 100) : 0;
             
             // Verificar se é um novo recorde
             const oldHighscore = <?= $highscore ?>;
@@ -671,11 +729,6 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
             
             // Iniciar contagem regressiva
             startCountdown();
-        }
-        
-        // Função para atualizar o preview do padrão
-        function updatePatternPreview() {
-            // Implemente a lógica para atualizar o preview do padrão
         }
     </script>
 </body>
