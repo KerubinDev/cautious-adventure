@@ -112,17 +112,29 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
             overflow: hidden;
         }
         
+        .connector-line {
+            position: absolute;
+            height: 2px;
+            background-color: rgba(255, 255, 255, 0.5);
+            transform-origin: left center;
+            z-index: 1;
+        }
+        
         .target {
             position: absolute;
             border-radius: 50%;
             cursor: pointer;
-            transform: scale(0);
-            animation: target-appear 0.2s forwards;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: bold;
             color: var(--secondary);
+            z-index: 2;
+            transition: transform 0.1s;
+        }
+        
+        .target:hover {
+            transform: scale(1.05);
         }
         
         .target.first {
@@ -133,11 +145,11 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
         .target.second {
             background-color: var(--primary); /* Vermelho para o segundo alvo */
             box-shadow: 0 0 10px rgba(255, 70, 85, 0.5);
-            display: none; /* Oculto inicialmente */
         }
         
-        @keyframes target-appear {
-            to { transform: scale(1); }
+        .target.completed {
+            background-color: rgba(100, 100, 100, 0.5);
+            box-shadow: none;
         }
         
         #countdown {
@@ -254,7 +266,7 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
         <div class="overlay" id="start-overlay">
             <div class="overlay-content">
                 <h2>Modo Flick</h2>
-                <p>Treine sua capacidade de realizar movimentos rápidos e precisos. Clique no alvo VERDE e rapidamente "flike" para o alvo VERMELHO quando ele aparecer.</p>
+                <p>Treine sua capacidade de realizar movimentos rápidos e precisos. Clique no alvo VERDE (1) e depois rapidamente "flike" para o alvo VERMELHO (2) para completar a sequência.</p>
                 
                 <div class="score-grid">
                     <div class="score-item">
@@ -329,9 +341,10 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
         let flickDistances = [];
         let firstTarget = null;
         let secondTarget = null;
-        let firstClickTime = 0;
-        let firstTargetPos = { x: 0, y: 0 };
+        let connectorLine = null;
         let targetPairId = 0;
+        let firstTargetClicked = false;
+        let firstClickTime = 0;
         
         // Elementos DOM
         const arena = document.getElementById('arena');
@@ -351,21 +364,21 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
         const difficultySettings = {
             easy: {
                 targetSize: 50,
-                minDistance: 100,
-                maxDistance: 300,
-                flickTimeout: 2000
+                minDistance: 200,
+                maxDistance: 350,
+                pairDuration: 7000
             },
             medium: {
                 targetSize: 40,
-                minDistance: 150,
-                maxDistance: 400,
-                flickTimeout: 1500
+                minDistance: 250,
+                maxDistance: 450,
+                pairDuration: 5000
             },
             hard: {
                 targetSize: 30,
-                minDistance: 200,
-                maxDistance: 500,
-                flickTimeout: 1000
+                minDistance: 300,
+                maxDistance: 550,
+                pairDuration: 3000
             }
         };
         
@@ -417,12 +430,10 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
             flickTimes = [];
             flickDistances = [];
             targetPairId = 0;
+            firstTargetClicked = false;
             
             // Limpar alvos anteriores
-            if (firstTarget) firstTarget.remove();
-            if (secondTarget) secondTarget.remove();
-            firstTarget = null;
-            secondTarget = null;
+            clearTargets();
             
             // Atualizar UI
             updateStats();
@@ -441,22 +452,30 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
             createTargetPair();
         }
         
+        // Função para limpar alvos
+        function clearTargets() {
+            if (firstTarget) firstTarget.remove();
+            if (secondTarget) secondTarget.remove();
+            if (connectorLine) connectorLine.remove();
+            
+            firstTarget = null;
+            secondTarget = null;
+            connectorLine = null;
+        }
+        
         // Função para criar um par de alvos
         function createTargetPair() {
             if (!gameActive) return;
             
-            // Limpar alvos anteriores se existirem
-            if (firstTarget) firstTarget.remove();
-            if (secondTarget) secondTarget.remove();
+            // Limpar alvos anteriores
+            clearTargets();
             
             const settings = difficultySettings[difficulty];
             const arenaRect = arena.getBoundingClientRect();
             
-            // Calcular tamanho ajustado dos alvos com base na dificuldade
-            const targetSize = settings.targetSize;
-            
-            // Gerar ID único para este par
+            // Incrementar ID do par
             targetPairId++;
+            firstTargetClicked = false;
             
             // Criar primeiro alvo (VERDE)
             firstTarget = document.createElement('div');
@@ -465,27 +484,27 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
             firstTarget.textContent = '1';
             
             // Posição aleatória para o primeiro alvo
-            const firstX = Math.random() * (arenaRect.width - targetSize * 2) + targetSize;
-            const firstY = Math.random() * (arenaRect.height - targetSize * 2) + targetSize;
+            const targetSize = settings.targetSize;
+            const padding = targetSize * 2; // Espaço das bordas
+            
+            const firstX = padding + Math.random() * (arenaRect.width - padding * 2);
+            const firstY = padding + Math.random() * (arenaRect.height - padding * 2);
             
             firstTarget.style.width = `${targetSize}px`;
             firstTarget.style.height = `${targetSize}px`;
-            firstTarget.style.left = `${firstX}px`;
-            firstTarget.style.top = `${firstY}px`;
-            
-            // Guardar posição para calcular distância do flick depois
-            firstTargetPos = { x: firstX + targetSize/2, y: firstY + targetSize/2 };
+            firstTarget.style.left = `${firstX - targetSize/2}px`;
+            firstTarget.style.top = `${firstY - targetSize/2}px`;
             
             // Adicionar evento de clique ao primeiro alvo
             firstTarget.addEventListener('click', handleFirstTargetClick);
             
-            // Criar segundo alvo (VERMELHO - oculto inicialmente)
+            // Criar segundo alvo (VERMELHO)
             secondTarget = document.createElement('div');
             secondTarget.className = 'target second';
             secondTarget.id = `target-second-${targetPairId}`;
             secondTarget.textContent = '2';
             
-            // Posição para o segundo alvo (distância controlada)
+            // Gerar posição para o segundo alvo com distância mínima garantida
             let secondX, secondY, distance;
             
             do {
@@ -497,11 +516,11 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
                 secondX = firstX + Math.cos(angle) * distance;
                 secondY = firstY + Math.sin(angle) * distance;
                 
-                // Verificar limites da arena
-                if (secondX < targetSize) secondX = targetSize;
-                if (secondX > arenaRect.width - targetSize) secondX = arenaRect.width - targetSize;
-                if (secondY < targetSize) secondY = targetSize;
-                if (secondY > arenaRect.height - targetSize) secondY = arenaRect.height - targetSize;
+                // Garantir que está dentro dos limites da arena
+                if (secondX < padding) secondX = padding;
+                if (secondX > arenaRect.width - padding) secondX = arenaRect.width - padding;
+                if (secondY < padding) secondY = padding;
+                if (secondY > arenaRect.height - padding) secondY = arenaRect.height - padding;
                 
                 // Recalcular distância após ajuste
                 const dx = secondX - firstX;
@@ -512,73 +531,89 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
             
             secondTarget.style.width = `${targetSize}px`;
             secondTarget.style.height = `${targetSize}px`;
-            secondTarget.style.left = `${secondX}px`;
-            secondTarget.style.top = `${secondY}px`;
+            secondTarget.style.left = `${secondX - targetSize/2}px`;
+            secondTarget.style.top = `${secondY - targetSize/2}px`;
             
             // Adicionar evento de clique ao segundo alvo
             secondTarget.addEventListener('click', handleSecondTargetClick);
             
-            // Adicionar alvos à arena
+            // Criar linha de conexão
+            connectorLine = document.createElement('div');
+            connectorLine.className = 'connector-line';
+            
+            // Posicionar e rotacionar a linha
+            const dx = secondX - firstX;
+            const dy = secondY - firstY;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx);
+            
+            connectorLine.style.width = `${length}px`;
+            connectorLine.style.left = `${firstX}px`;
+            connectorLine.style.top = `${firstY}px`;
+            connectorLine.style.transform = `rotate(${angle}rad)`;
+            
+            // Adicionar elementos à arena
+            arena.appendChild(connectorLine);
             arena.appendChild(firstTarget);
             arena.appendChild(secondTarget);
+            
+            // Configurar timeout para este par
+            setTimeout(() => {
+                if (targetPairId === parseInt(firstTarget.id.split('-')[2]) && gameActive) {
+                    // Se o tempo acabou e este par ainda está ativo, criar novo par
+                    createTargetPair();
+                }
+            }, settings.pairDuration);
         }
         
         // Função para lidar com clique no primeiro alvo
         function handleFirstTargetClick() {
-            if (!gameActive) return;
+            if (!gameActive || firstTargetClicked) return;
             
-            // Registrar tempo do clique
+            firstTargetClicked = true;
             firstClickTime = Date.now();
-            
-            // Mostrar o segundo alvo
-            secondTarget.style.display = 'flex';
-            
-            // Iniciar timeout para o flick
-            const settings = difficultySettings[difficulty];
-            setTimeout(() => {
-                // Se o segundo alvo ainda estiver visível, o usuário não conseguiu acertar a tempo
-                if (secondTarget && secondTarget.style.display !== 'none' && gameActive) {
-                    // Criar novo par de alvos
-                    createTargetPair();
-                }
-            }, settings.flickTimeout);
+            firstTarget.classList.add('completed');
         }
         
         // Função para lidar com clique no segundo alvo
         function handleSecondTargetClick() {
-            if (!gameActive || !firstClickTime) return;
+            if (!gameActive || !firstTargetClicked) return;
             
-            // Calcular tempo do flick
+            // Verificar se foi um flick válido (clicou no 1 e depois no 2)
             const flickTime = Date.now() - firstClickTime;
             flickTimes.push(flickTime);
             
             // Calcular distância do flick
-            const targetRect = secondTarget.getBoundingClientRect();
-            const targetX = targetRect.left + targetRect.width / 2;
-            const targetY = targetRect.top + targetRect.height / 2;
+            const rect1 = firstTarget.getBoundingClientRect();
+            const rect2 = secondTarget.getBoundingClientRect();
             
-            const dx = targetX - firstTargetPos.x;
-            const dy = targetY - firstTargetPos.y;
+            const center1X = rect1.left + rect1.width / 2;
+            const center1Y = rect1.top + rect1.height / 2;
+            const center2X = rect2.left + rect2.width / 2;
+            const center2Y = rect2.top + rect2.height / 2;
+            
+            const dx = center2X - center1X;
+            const dy = center2Y - center1Y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             
             flickDistances.push(distance);
             
-            // Pontuação com bônus por velocidade
+            // Atualizar pontuação
             flicks++;
             
             // Bônus por velocidade: quanto mais rápido, mais pontos
             const settings = difficultySettings[difficulty];
-            const speedBonus = Math.max(0, Math.round(10 * (1 - flickTime / settings.flickTimeout)));
+            const speedBonus = Math.max(0, Math.round(10 * (1 - flickTime / 1000)));
             score += 10 + speedBonus;
             
             // Atualizar estatísticas
             updateStats();
             
-            // Esconder o segundo alvo
-            secondTarget.style.display = 'none';
+            // Marcar segundo alvo como concluído
+            secondTarget.classList.add('completed');
             
-            // Criar próximo par de alvos
-            setTimeout(createTargetPair, 300);
+            // Criar próximo par após breve pausa
+            setTimeout(createTargetPair, 500);
         }
         
         // Função para atualizar estatísticas na UI
@@ -599,10 +634,7 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
             clearInterval(timeInterval);
             
             // Limpar alvos
-            if (firstTarget) firstTarget.remove();
-            if (secondTarget) secondTarget.remove();
-            firstTarget = null;
-            secondTarget = null;
+            clearTargets();
             
             // Calcular estatísticas finais
             const avgReactionTime = flickTimes.length > 0 ? 
