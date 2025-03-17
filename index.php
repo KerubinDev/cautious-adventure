@@ -19,6 +19,8 @@ require_once 'common.php';
         }
         
         body {
+            background-color: var(--secondary);
+            color: var(--text);
             font-family: 'Montserrat', sans-serif;
             line-height: 1.6;
             min-height: 100vh;
@@ -34,9 +36,15 @@ require_once 'common.php';
         }
         
         header {
-            background-color: var(--secondary);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 20px 0;
+            text-align: center;
+        }
+        
+        .tagline {
+            color: var(--text);
+            opacity: 0.9;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
         }
         
         .settings-bar {
@@ -47,7 +55,7 @@ require_once 'common.php';
             padding: 15px 20px;
             background-color: var(--accent);
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         
         .settings-info {
@@ -85,18 +93,52 @@ require_once 'common.php';
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
+            background-color: var(--primary);
+            color: var(--text);
         }
         
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            background-color: var(--primary-hover);
+        }
+        
+        .btn-secondary {
+            background-color: var(--accent);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
         }
         
         h1 {
             font-size: 2.5rem;
             text-align: center;
-            margin: 50px 0 30px;
+            margin: 30px 0;
             color: var(--text);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            margin: 40px 0 20px;
+            text-align: center;
+            color: var(--text);
+            position: relative;
+            display: inline-block;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background-color: var(--primary);
         }
         
         .modes-grid {
@@ -110,13 +152,15 @@ require_once 'common.php';
             background-color: var(--accent);
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         .mode-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary);
         }
         
         .mode-image {
@@ -133,12 +177,25 @@ require_once 'common.php';
             font-size: 1.4rem;
             margin-bottom: 10px;
             color: var(--text);
+            position: relative;
+            display: inline-block;
+        }
+        
+        .mode-title::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 30px;
+            height: 2px;
+            background-color: var(--primary);
         }
         
         .mode-description {
             font-size: 0.9rem;
             margin-bottom: 20px;
             color: rgba(255, 255, 255, 0.8);
+            line-height: 1.5;
         }
         
         footer {
@@ -148,6 +205,22 @@ require_once 'common.php';
             text-align: center;
             font-size: 0.8rem;
             color: rgba(255, 255, 255, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .section-heading {
+            text-align: center;
+            position: relative;
+            margin-bottom: 40px;
+        }
+        
+        .section-heading::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 3px;
+            background-color: var(--primary);
+            margin: 15px auto 0;
         }
     </style>
 </head>
@@ -155,12 +228,12 @@ require_once 'common.php';
     <header>
         <div class="container">
             <h1>Valorant Aim Trainer</h1>
-            <p style="text-align: center; margin-bottom: 20px;">Aprimore suas habilidades de mira com exercícios específicos para Valorant</p>
+            <p class="tagline">Aprimore suas habilidades de mira com exercícios específicos para Valorant</p>
             
             <div class="settings-bar">
                 <div class="settings-info">
                     <div class="setting-item">
-                        <div class="setting-value"><?= $_SESSION['settings']['dpi'] ?></div>
+                        <div class="setting-value"><?= isset($_SESSION['settings']['dpi']) ? $_SESSION['settings']['dpi'] : '800' ?></div>
                         <div class="setting-label">DPI</div>
                     </div>
                     <div class="setting-item">
@@ -168,7 +241,7 @@ require_once 'common.php';
                         <div class="setting-label">SENSIBILIDADE</div>
                     </div>
                     <div class="setting-item">
-                        <div class="setting-value"><?= $_SESSION['settings']['edpi'] ?></div>
+                        <div class="setting-value"><?= isset($_SESSION['settings']['edpi']) ? $_SESSION['settings']['edpi'] : '400' ?></div>
                         <div class="setting-label">EDPI</div>
                     </div>
                 </div>
@@ -181,7 +254,9 @@ require_once 'common.php';
     </header>
     
     <main class="container">
-        <h2 style="margin: 40px 0 20px; text-align: center;">Escolha seu modo de treino</h2>
+        <div class="section-heading">
+            <h2>Escolha seu modo de treino</h2>
+        </div>
         
         <div class="modes-grid">
             <div class="mode-card">

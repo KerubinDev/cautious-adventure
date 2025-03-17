@@ -15,11 +15,11 @@ $default_settings = [
     'sensitivity' => 0.5,
     'edpi' => 400,
     'crosshair_size' => 2,
-    'crosshair_color' => '#ff4655',
+    'crosshair_color' => '#ff4655', // Vermelho Valorant
     'target_color' => '#00ff00',
-    'bg_color' => '#0f1923',
-    'accent_color' => '#28344a',
-    'text_color' => '#f9f9f9',
+    'bg_color' => '#0f1923',        // Azul escuro Valorant
+    'accent_color' => '#28344a',    // Azul médio Valorant
+    'text_color' => '#f9f9f9',      // Branco levemente suave
     'sound_enabled' => true,
     'timer_display' => true,
     'visual_feedback' => true
@@ -54,7 +54,7 @@ function getMouseScaleFactor() {
     return $scale_factor;
 }
 
-// Função para gerar CSS com as variáveis de tema
+// Função para gerar CSS com as variáveis de tema do Valorant
 function getThemeCSS() {
     // Garantir valores padrão para todas as chaves usadas
     $crosshair_color = isset($_SESSION['settings']['crosshair_color']) ? $_SESSION['settings']['crosshair_color'] : '#ff4655';
@@ -72,29 +72,6 @@ function getThemeCSS() {
             --accent: {$accent_color};
             --text: {$text_color};
             --mouse-scale: " . getMouseScaleFactor() . ";
-        }
-        
-        /* CSS base para garantir a aparência correta */
-        body {
-            background-color: var(--secondary);
-            color: var(--text);
-        }
-        
-        .btn {
-            background-color: var(--primary);
-            color: var(--text);
-        }
-        
-        .btn-secondary {
-            background-color: var(--accent);
-        }
-        
-        .target {
-            background-color: var(--target);
-        }
-        
-        .header, .overlay-content {
-            background-color: var(--accent);
         }
     ";
     return $css;
