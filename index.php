@@ -19,324 +19,231 @@ require_once 'common.php';
         }
         
         body {
-            background-color: var(--secondary);
-            color: var(--text);
             font-family: 'Montserrat', sans-serif;
             line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         
         .container {
+            width: 100%;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 0 20px;
         }
         
         header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-        
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 0.5rem;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        
-        p.subtitle {
-            font-size: 1.2rem;
-            opacity: 0.8;
+            background-color: var(--secondary);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px 0;
         }
         
         .settings-bar {
-            background-color: var(--accent);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-top: 20px;
+            padding: 15px 20px;
+            background-color: var(--accent);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         
         .settings-info {
             display: flex;
-            gap: 2rem;
-            align-items: center;
+            gap: 30px;
         }
         
-        .settings-value {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .setting-item {
+            text-align: center;
         }
         
-        .settings-label {
+        .setting-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .setting-label {
             font-size: 0.8rem;
             text-transform: uppercase;
             opacity: 0.8;
         }
         
-        .settings-number {
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-        
-        .settings-actions {
+        .action-buttons {
             display: flex;
-            gap: 1rem;
+            gap: 10px;
         }
         
         .btn {
-            background-color: var(--primary);
-            color: var(--text);
+            padding: 8px 16px;
             border: none;
-            padding: 0.5rem 1rem;
             border-radius: 4px;
+            font-weight: 600;
             cursor: pointer;
-            font-weight: bold;
-            transition: transform 0.2s, background-color 0.2s;
+            transition: all 0.3s ease;
             text-decoration: none;
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
+            display: inline-block;
         }
         
         .btn:hover {
-            transform: scale(1.05);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         
-        .btn-secondary {
-            background-color: var(--accent);
-        }
-        
-        .btn-secondary:hover {
-            background-color: #3a4c6a;
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin: 50px 0 30px;
+            color: var(--text);
         }
         
         .modes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
         }
         
         .mode-card {
             background-color: var(--accent);
             border-radius: 8px;
             overflow: hidden;
-            transition: transform 0.3s;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
         .mode-card:hover {
-            transform: translateY(-10px);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
         
         .mode-image {
-            height: 180px;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .mode-image::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
-            background: linear-gradient(0deg, rgba(15, 25, 35, 0.8) 0%, rgba(15, 25, 35, 0) 50%);
+            height: 180px;
+            object-fit: cover;
         }
         
-        .mode-content {
-            padding: 1.5rem;
+        .mode-info {
+            padding: 20px;
         }
         
         .mode-title {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            color: var(--primary);
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            color: var(--text);
         }
         
         .mode-description {
-            margin-bottom: 1.5rem;
             font-size: 0.9rem;
-            opacity: 0.9;
-        }
-        
-        .mode-btn {
-            display: inline-block;
-            background-color: var(--primary);
-            color: var(--text);
-            text-decoration: none;
-            padding: 0.7rem 1.5rem;
-            border-radius: 4px;
-            font-weight: bold;
-            transition: background-color 0.3s;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        
-        .mode-btn:hover {
-            background-color: #ff2a3c;
-        }
-        
-        .difficulty {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 0.5rem;
-        }
-        
-        .difficulty-point {
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            background-color: var(--primary);
-            opacity: 0.3;
-        }
-        
-        .difficulty-point.active {
-            opacity: 1;
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.8);
         }
         
         footer {
+            background-color: var(--secondary);
+            padding: 20px 0;
+            margin-top: auto;
             text-align: center;
-            margin-top: 4rem;
-            padding-top: 2rem;
-            border-top: 1px solid #28344a;
-            font-size: 0.9rem;
-            opacity: 0.7;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
+    <header>
+        <div class="container">
             <h1>Valorant Aim Trainer</h1>
-            <p class="subtitle">Aprimore suas habilidades de mira com exercícios específicos para Valorant</p>
-        </header>
-        
-        <div class="settings-bar">
-            <div class="settings-info">
-                <div class="settings-value">
-                    <div class="settings-number"><?= $_SESSION['settings']['dpi'] ?></div>
-                    <div class="settings-label">DPI</div>
-                </div>
-                
-                <div class="settings-value">
-                    <div class="settings-number"><?= $_SESSION['settings']['sens'] ?></div>
-                    <div class="settings-label">Sensibilidade</div>
-    </div>
-
-                <div class="settings-value">
-                    <div class="settings-number"><?= $_SESSION['settings']['edpi'] ?></div>
-                    <div class="settings-label">eDPI</div>
-                </div>
-            </div>
+            <p style="text-align: center; margin-bottom: 20px;">Aprimore suas habilidades de mira com exercícios específicos para Valorant</p>
             
-            <div class="settings-actions">
-                <a href="stats.php" class="btn btn-secondary">Ver Estatísticas</a>
-                <a href="settings.php" class="btn">Configurações Avançadas</a>
+            <div class="settings-bar">
+                <div class="settings-info">
+                    <div class="setting-item">
+                        <div class="setting-value"><?= $_SESSION['settings']['dpi'] ?></div>
+                        <div class="setting-label">DPI</div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-value"><?= $_SESSION['settings']['sensitivity'] ?></div>
+                        <div class="setting-label">SENSIBILIDADE</div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-value"><?= $_SESSION['settings']['edpi'] ?></div>
+                        <div class="setting-label">EDPI</div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <a href="stats.php" class="btn btn-secondary">Ver Estatísticas</a>
+                    <a href="settings.php" class="btn">Configurações Avançadas</a>
+                </div>
             </div>
         </div>
-        
-        <h2>Escolha seu modo de treino</h2>
+    </header>
+    
+    <main class="container">
+        <h2 style="margin: 40px 0 20px; text-align: center;">Escolha seu modo de treino</h2>
         
         <div class="modes-grid">
             <div class="mode-card">
-                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1616530940355-351fabd9524b?auto=format&fit=crop&q=80&w=2000')"></div>
-                <div class="mode-content">
-                    <div class="difficulty">
-                        <span class="difficulty-point active"></span>
-                        <span class="difficulty-point active"></span>
-                        <span class="difficulty-point"></span>
-                    </div>
+                <img src="https://images.unsplash.com/photo-1589254065878-42c9da997008" alt="Precisão" class="mode-image">
+                <div class="mode-info">
                     <h3 class="mode-title">Precisão</h3>
                     <p class="mode-description">Treine sua precisão com alvos estáticos. Melhore sua capacidade de acertar headshots consistentes.</p>
-                    <a href="precision.php" class="mode-btn">Iniciar Treino</a>
+                    <a href="precision.php" class="btn">Iniciar Treino</a>
                 </div>
             </div>
             
             <div class="mode-card">
-                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1612287230202-1ff1d85d1bfb?auto=format&fit=crop&q=80&w=2000')"></div>
-                <div class="mode-content">
-                    <div class="difficulty">
-                        <span class="difficulty-point active"></span>
-                        <span class="difficulty-point active"></span>
-                        <span class="difficulty-point active"></span>
-                    </div>
+                <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420" alt="Reflexo" class="mode-image">
+                <div class="mode-info">
                     <h3 class="mode-title">Reflexo</h3>
                     <p class="mode-description">Aumente sua velocidade de reação com alvos que aparecem rapidamente. Treine para situações de duelos.</p>
-                    <a href="reflex.php" class="mode-btn">Iniciar Treino</a>
+                    <a href="reflex.php" class="btn">Iniciar Treino</a>
                 </div>
             </div>
             
             <div class="mode-card">
-                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1608111283358-aca5cca1b479?auto=format&fit=crop&q=80&w=2000')"></div>
-                <div class="mode-content">
-                    <div class="difficulty">
-                        <span class="difficulty-point active"></span>
-                        <span class="difficulty-point active"></span>
-                        <span class="difficulty-point active"></span>
-                    </div>
+                <img src="https://images.unsplash.com/photo-1551808525-51a94da548ce" alt="Tracking" class="mode-image">
+                <div class="mode-info">
                     <h3 class="mode-title">Tracking</h3>
                     <p class="mode-description">Aprimore sua capacidade de acompanhar alvos em movimento. Ideal para agentes que usam habilidades de movimento.</p>
-                    <a href="tracking.php" class="mode-btn">Iniciar Treino</a>
+                    <a href="tracking.php" class="btn">Iniciar Treino</a>
                 </div>
             </div>
             
             <div class="mode-card">
-                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?auto=format&fit=crop&q=80&w=2000')"></div>
-                <div class="mode-content">
-                    <div class="difficulty">
-                        <span class="difficulty-point active"></span>
-                        <span class="difficulty-point"></span>
-                        <span class="difficulty-point"></span>
-                    </div>
+                <img src="https://images.unsplash.com/photo-1548191194-b3d4f051fd7d" alt="Flick" class="mode-image">
+                <div class="mode-info">
                     <h3 class="mode-title">Flick</h3>
-                    <p class="mode-description">Treine sua capacidade de realizar flicks rápidos e precisos. Essencial para jogadores de Operator e Sheriff.</p>
-                    <a href="flick.php" class="mode-btn">Iniciar Treino</a>
+                    <p class="mode-description">Treine movimentos rápidos da mira entre dois pontos. Essencial para reações rápidas e precisas.</p>
+                    <a href="flick.php" class="btn">Iniciar Treino</a>
                 </div>
             </div>
             
             <div class="mode-card">
-                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1607853554439-0069ec0f29b6?auto=format&fit=crop&q=80&w=2000')"></div>
-                <div class="mode-content">
-                    <div class="difficulty">
-                        <span class="difficulty-point active"></span>
-                        <span class="difficulty-point active"></span>
-                        <span class="difficulty-point active"></span>
-                    </div>
+                <img src="https://images.unsplash.com/photo-1577401239170-897942555fb3" alt="Micro Ajustes" class="mode-image">
+                <div class="mode-info">
                     <h3 class="mode-title">Micro Ajustes</h3>
-                    <p class="mode-description">Melhore sua capacidade de realizar pequenos ajustes na mira. Perfeito para melhorar spray control e recoil.</p>
-                    <a href="micro-adjust.php" class="mode-btn">Iniciar Treino</a>
+                    <p class="mode-description">Melhore o controle fino da mira para ajustes precisos. Perfeito para controle de recoil e ajustes mínimos.</p>
+                    <a href="micro-adjust.php" class="btn">Iniciar Treino</a>
                 </div>
             </div>
             
             <div class="mode-card">
-                <div class="mode-image" style="background-image: url('https://images.unsplash.com/photo-1590422749897-47726d1b0b6d?auto=format&fit=crop&q=80&w=2000')"></div>
-                <div class="mode-content">
-                    <div class="difficulty">
-                        <span class="difficulty-point active"></span>
-                        <span class="difficulty-point active"></span>
-                        <span class="difficulty-point active"></span>
-                    </div>
+                <img src="https://images.unsplash.com/photo-1560419555-d3123bcbb23a" alt="Target Switching" class="mode-image">
+                <div class="mode-info">
                     <h3 class="mode-title">Target Switching</h3>
-                    <p class="mode-description">Treine para alternar rapidamente entre alvos. Essencial para situações de múltiplos inimigos e clutches.</p>
-                    <a href="switching.php" class="mode-btn">Iniciar Treino</a>
+                    <p class="mode-description">Pratique a troca rápida entre alvos. Fundamental para eliminar múltiplos inimigos rapidamente.</p>
+                    <a href="switching.php" class="btn">Iniciar Treino</a>
                 </div>
             </div>
         </div>
-        
-        <footer>
-            <p>© 2025 Valorant Aim Trainer | Inspirado pelo jogo Valorant da Riot Games</p>
-            <p>Este é um projeto não oficial e não tem afiliação com a Riot Games.</p>
-        </footer>
-    </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Valorant Aim Trainer | Design inspirado no universo de Valorant | Não afiliado à Riot Games</p>
+        </div>
+    </footer>
 </body>
 </html>

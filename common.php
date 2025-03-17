@@ -49,6 +49,29 @@ function getThemeCSS() {
             --text: {$_SESSION['settings']['text_color']};
             --mouse-scale: " . getMouseScaleFactor() . ";
         }
+        
+        /* CSS base para garantir a aparência correta */
+        body {
+            background-color: var(--secondary);
+            color: var(--text);
+        }
+        
+        .btn {
+            background-color: var(--primary);
+            color: var(--text);
+        }
+        
+        .btn-secondary {
+            background-color: var(--accent);
+        }
+        
+        .target {
+            background-color: var(--target);
+        }
+        
+        .header, .overlay-content {
+            background-color: var(--accent);
+        }
     ";
     return $css;
 }
@@ -56,6 +79,10 @@ function getThemeCSS() {
 // Função auxiliar para ajustar brilho de cores
 function adjustBrightness($hex, $percent) {
     $hex = ltrim($hex, '#');
+    
+    if (strlen($hex) == 3) {
+        $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+    }
     
     $r = hexdec(substr($hex, 0, 2));
     $g = hexdec(substr($hex, 2, 2));
