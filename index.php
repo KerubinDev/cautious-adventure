@@ -164,7 +164,7 @@ require_once 'common.php';
                         <div class="setting-label">DPI</div>
                     </div>
                     <div class="setting-item">
-                        <div class="setting-value"><?= $_SESSION['settings']['sensitivity'] ?></div>
+                        <div class="setting-value"><?= isset($_SESSION['settings']['sensitivity']) ? $_SESSION['settings']['sensitivity'] : '0.5' ?></div>
                         <div class="setting-label">SENSIBILIDADE</div>
                     </div>
                     <div class="setting-item">
