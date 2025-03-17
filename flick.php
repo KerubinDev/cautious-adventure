@@ -507,11 +507,15 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
             // Gerar posição para o segundo alvo com distância mínima garantida
             let secondX, secondY, distance;
             
+            // Aplicar escala da sensibilidade às distâncias
+            const scaledMinDistance = applyMouseScaling(settings.minDistance);
+            const scaledMaxDistance = applyMouseScaling(settings.maxDistance);
+            
             do {
                 // Ângulo aleatório
                 const angle = Math.random() * Math.PI * 2;
-                // Distância aleatória entre min e max
-                distance = settings.minDistance + Math.random() * (settings.maxDistance - settings.minDistance);
+                // Distância aleatória entre min e max escalados
+                distance = scaledMinDistance + Math.random() * (scaledMaxDistance - scaledMinDistance);
                 
                 secondX = firstX + Math.cos(angle) * distance;
                 secondY = firstY + Math.sin(angle) * distance;
@@ -527,7 +531,7 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
                 const dy = secondY - firstY;
                 distance = Math.sqrt(dx * dx + dy * dy);
                 
-            } while (distance < settings.minDistance); // Garantir distância mínima
+            } while (distance < scaledMinDistance); // Garantir distância mínima
             
             secondTarget.style.width = `${targetSize}px`;
             secondTarget.style.height = `${targetSize}px`;
@@ -601,9 +605,13 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
             // Atualizar pontuação
             flicks++;
             
-            // Bônus por velocidade: quanto mais rápido, mais pontos
+            // Ajustar a medição do tempo com base no fator de escala
             const settings = difficultySettings[difficulty];
-            const speedBonus = Math.max(0, Math.round(10 * (1 - flickTime / 1000)));
+            const scaleFactor = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mouse-scale').trim()) || 1.0;
+            
+            // Ajustar o bônus de acordo com a sensibilidade (mais sensível = mais difícil = mais pontos)
+            const adjustedTime = flickTime / scaleFactor;
+            const speedBonus = Math.max(0, Math.round(10 * (1 - adjustedTime / 1000)));
             score += 10 + speedBonus;
             
             // Atualizar estatísticas
@@ -677,6 +685,17 @@ $highscore = $_SESSION['flick_highscore'] ?? 0;
             
             // Iniciar contagem regressiva
             startCountdown();
+        }
+        
+        // Adicione esta nova função
+        function applyMouseScaling(pixelDistance) {
+            // Obter o fator de escala definido no CSS
+            const scaleFactorStr = getComputedStyle(document.documentElement).getPropertyValue('--mouse-scale').trim();
+            const scaleFactor = parseFloat(scaleFactorStr) || 1.0;
+            
+            // Ajustar a distância com base no fator de escala
+            // Uma escala maior = movimentos mais rápidos = distâncias efetivas menores
+            return pixelDistance / scaleFactor;
         }
     </script>
 </body>

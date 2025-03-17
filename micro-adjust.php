@@ -579,6 +579,9 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
             const centerX = arenaRect.width / 2;
             const centerY = arenaRect.height / 2;
             
+            // Aplicar escala às distâncias entre pontos no padrão
+            const scaleFactor = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mouse-scale').trim()) || 1.0;
+            
             // Criar pontos do padrão
             for (let i = 0; i < settings.pointCount; i++) {
                 let x, y;
@@ -590,8 +593,10 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
                 } else {
                     // Outros pontos são baseados no anterior, simulando um padrão de recoil
                     const prevPoint = currentPattern[i - 1];
-                    const offsetX = (Math.random() - 0.5) * 60;
-                    const offsetY = -Math.random() * 60; // Sempre para cima (simulando recoil)
+                    
+                    // Aplica o fator de escala ao offset
+                    const offsetX = (Math.random() - 0.5) * 60 / scaleFactor;
+                    const offsetY = -Math.random() * 60 / scaleFactor; // Sempre para cima (simulando recoil)
                     
                     x = prevPoint.x + offsetX;
                     y = prevPoint.y + offsetY;
@@ -638,7 +643,10 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
                 Math.pow(y - currentPoint.y, 2)
             );
             
-            if (distance <= settings.tolerance) {
+            // Aplicar escala da sensibilidade à tolerância
+            const scaledTolerance = applyMouseScaling(settings.tolerance);
+            
+            if (distance <= scaledTolerance) {
                 // Acertou o alvo!
                 const targetElement = document.getElementById(`target-${currentTargetIndex}`);
                 targetElement.classList.remove('active');
@@ -729,6 +737,16 @@ $highscore = $_SESSION['microadjust_highscore'] ?? 0;
             
             // Iniciar contagem regressiva
             startCountdown();
+        }
+
+        // Adicione esta nova função
+        function applyMouseScaling(pixelDistance) {
+            // Obter o fator de escala definido no CSS
+            const scaleFactorStr = getComputedStyle(document.documentElement).getPropertyValue('--mouse-scale').trim();
+            const scaleFactor = parseFloat(scaleFactorStr) || 1.0;
+            
+            // Ajustar a distância com base no fator de escala
+            return pixelDistance / scaleFactor;
         }
     </script>
 </body>

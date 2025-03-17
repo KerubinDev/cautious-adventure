@@ -720,6 +720,31 @@ $settings = $_SESSION['settings'];
         
         // Inicializar preview
         updatePreview();
+
+        // Ajuste no manipulador de formulário para recalcular eDPI
+        document.getElementById('settings-form').addEventListener('submit', function(e) {
+            // Obter valores
+            const dpi = parseFloat(document.getElementById('dpi').value);
+            const sensitivity = parseFloat(document.getElementById('sens').value);
+            
+            // Atualizar campo de eDPI
+            const edpi = dpi * sensitivity;
+            document.getElementById('edpi').value = edpi.toFixed(2);
+            
+            // O resto do código do manipulador permanece...
+        });
+
+        // Adicionar listeners para atualizar eDPI em tempo real
+        document.getElementById('dpi').addEventListener('input', updateEDPI);
+        document.getElementById('sens').addEventListener('input', updateEDPI);
+
+        function updateEDPI() {
+            const dpi = parseFloat(document.getElementById('dpi').value) || 800;
+            const sensitivity = parseFloat(document.getElementById('sens').value) || 0.5;
+            const edpi = dpi * sensitivity;
+            document.getElementById('edpi').value = edpi.toFixed(2);
+            document.getElementById('edpi-display').textContent = edpi.toFixed(2);
+        }
     </script>
 </body>
 </html> 
